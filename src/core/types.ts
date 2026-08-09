@@ -6,6 +6,8 @@ export type Size = [number, number];
 export interface FixedSlot {
   position: Point;
   size: Size;
+  anchors?: [number, number, number, number];
+  alignment?: Point;
   zOrder?: number;
 }
 

@@ -50,8 +50,14 @@ All entry documents are generated and compiled first. Each entry Blueprint imple
 
 List and tile `spacing: [x, y]` maps to UMG's horizontal and vertical entry spacing. `TileView.entrySize` maps to entry width and height. `TileView.columns` is validated as a positive integer; UMG calculates the actual number of visible columns from the widget width, entry width, and spacing, so the slot width must be consistent with that value.
 
-Canvas children accept `position`, `size`, and `zOrder`. Other UMG parents use their native slot properties (`padding`, alignment, and box sizing rules). A slot field unsupported by its actual UMG parent is an import error rather than being ignored.
+Canvas children accept `position`, `size`, optional `anchors`, optional `alignment`, and `zOrder`. Anchors use normalized `[minX, minY, maxX, maxY]` values and alignment uses `[pivotX, pivotY]`; on a stretched axis, `size` is the far-edge margin. For example, `position: [0, 0]`, `size: [0, 0]`, and `anchors: [0, 0, 1, 1]` fills the parent at any viewport size. Other UMG parents use their native slot properties (`padding`, alignment, and box sizing rules). A slot field unsupported by its actual UMG parent is an import error rather than being ignored.
+
+Border corners are square by default. `cornerRadius` is an optional non-negative radius; omit it or use `0` for a rectangular border. A border stroke requires both `borderColor` and `borderWidth`.
 
 ## Compatibility and verification
 
 The code uses Unreal Engine 5 editor APIs and public UMG widget setters. The list entry class and designer preview count are protected engine properties without public setters, so those two documented UMG properties are assigned through Unreal reflection. Compile the plugin against the exact engine release used by the project before distributing it.
+
+The source keeps the slot import path compatible across Unreal Engine 5 releases instead of relying on compiler-specific variable shadowing behavior. `UScaleBoxSlot::SetPadding` is used only on UE 5.0; Epic deprecated and disabled Scale Box slot padding in UE 5.1, so newer releases reject non-zero Scale Box slot padding with an actionable import error. Wrap the Scale Box in a padding-capable container when that spacing is required.
+
+The plugin is currently build-verified against UE 5.6.1. The included test host tracks UE 5.7; compile and run the automation test against that engine release before shipping a prebuilt 5.7 binary.

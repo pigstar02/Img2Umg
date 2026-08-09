@@ -16,7 +16,7 @@
       {
         "id": "QuestIcon",
         "type": "Image",
-        "props": { "source": null, "placeholderColor": "#49658FFF", "placeholderLabel": "!" },
+        "props": { "source": null, "placeholderColor": "#49658FFF" },
         "slot": { "position": [14, 14], "size": [56, 56], "zOrder": 1 }
       },
       {

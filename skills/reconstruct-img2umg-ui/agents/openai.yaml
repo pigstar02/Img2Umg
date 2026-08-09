@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reconstruct Img2UMG UI"
+  short_description: "Turn UI screenshots into validated Img2UMG packages"
+  default_prompt: "Use $reconstruct-img2umg-ui to reconstruct this UI screenshot as a validated Img2UMG package."

@@ -3,12 +3,12 @@
   "version": 1,
   "entryTemplate": "Inventory_TileItem",
   "items": [
-    { "overrides": [{ "target": "ItemName", "props": { "text": "Pulse Rifle" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#365D8FFF", "placeholderLabel": "RIFLE" } }] },
-    { "overrides": [{ "target": "ItemName", "props": { "text": "Field Shield" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#466F67FF", "placeholderLabel": "SHIELD" } }] },
-    { "overrides": [{ "target": "ItemName", "props": { "text": "Power Cell" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#8A683BFF", "placeholderLabel": "CELL" } }] },
-    { "overrides": [{ "target": "ItemName", "props": { "text": "Scanner" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#644B85FF", "placeholderLabel": "SCAN" } }] },
-    { "overrides": [{ "target": "ItemName", "props": { "text": "Med Kit" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#854F55FF", "placeholderLabel": "MED" } }] },
-    { "overrides": [{ "target": "ItemName", "props": { "text": "Beacon" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#326F78FF", "placeholderLabel": "SIGNAL" } }] },
-    { "overrides": [{ "target": "ItemName", "props": { "text": "Data Core" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#58618AFF", "placeholderLabel": "CORE" } }] }
+    { "overrides": [{ "target": "ItemName", "props": { "text": "Pulse Rifle" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#365D8FFF" } }] },
+    { "overrides": [{ "target": "ItemName", "props": { "text": "Field Shield" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#466F67FF" } }] },
+    { "overrides": [{ "target": "ItemName", "props": { "text": "Power Cell" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#8A683BFF" } }] },
+    { "overrides": [{ "target": "ItemName", "props": { "text": "Scanner" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#644B85FF" } }] },
+    { "overrides": [{ "target": "ItemName", "props": { "text": "Med Kit" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#854F55FF" } }] },
+    { "overrides": [{ "target": "ItemName", "props": { "text": "Beacon" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#326F78FF" } }] },
+    { "overrides": [{ "target": "ItemName", "props": { "text": "Data Core" } }, { "target": "ItemIcon", "props": { "placeholderColor": "#58618AFF" } }] }
   ]
 }

@@ -16,7 +16,7 @@
       {
         "id": "ItemIcon",
         "type": "Image",
-        "props": { "source": null, "placeholderColor": "#566783FF", "placeholderLabel": "ITEM" },
+        "props": { "source": null, "placeholderColor": "#566783FF" },
         "slot": { "position": [16, 16], "size": [173, 142], "zOrder": 1 }
       },
       {

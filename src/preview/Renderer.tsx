@@ -4,24 +4,25 @@ import type { EntryFile, PreviewFile, PreviewItem, ScreenFile, UiNode, UiPackage
 interface PackageRendererProps {
   pkg: UiPackage;
   screen: ScreenFile;
+  viewport: { width: number; height: number };
 }
 
-export function PackageRenderer({ pkg, screen }: PackageRendererProps) {
+export function PackageRenderer({ pkg, screen, viewport }: PackageRendererProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   useEffect(() => {
     const element = hostRef.current;
     if (!element) return;
-    const update = () => setScale(Math.min(1, element.clientWidth / screen.canvas.width));
+    const update = () => setScale(Math.min(1, element.clientWidth / viewport.width));
     update();
     const observer = new ResizeObserver(update);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [screen.canvas.width]);
+  }, [viewport.width]);
 
   return (
-    <div ref={hostRef} className="preview-host" style={{ height: screen.canvas.height * scale }}>
-      <div className="screen" style={{ width: screen.canvas.width, height: screen.canvas.height, transform: `scale(${scale})` }}>
+    <div ref={hostRef} className="preview-host" style={{ height: viewport.height * scale }}>
+      <div className="screen" data-preview-width={viewport.width} data-preview-height={viewport.height} style={{ width: viewport.width, height: viewport.height, transform: `scale(${scale})` }}>
         <NodeRenderer node={screen.root} pkg={pkg} root />
       </div>
     </div>
@@ -48,7 +49,7 @@ function NodeRenderer({ node, pkg, root = false, parentType }: { node: UiNode; p
     case "Spacer":
       return <div data-node={node.id} style={{ ...style, width: arrayNumber(props.size, 0) ?? style.width, height: arrayNumber(props.size, 1) ?? style.height }} />;
     case "Border":
-      return <div data-node={node.id} style={{ ...style, background: color(props.backgroundColor), border: `${number(props.borderWidth) ?? 0}px solid ${color(props.borderColor) ?? "transparent"}`, padding: number(props.padding) }}>{children}</div>;
+      return <div data-node={node.id} style={{ ...style, background: color(props.backgroundColor), border: `${number(props.borderWidth) ?? 0}px solid ${color(props.borderColor) ?? "transparent"}`, borderRadius: number(props.cornerRadius) ?? 0, padding: cssMargin(props.padding) }}>{children}</div>;
     case "Image":
       return <ImageNode node={node} style={style} />;
     case "Text":
@@ -67,7 +68,7 @@ function ImageNode({ node, style }: { node: UiNode; style: CSSProperties }) {
   const [failed, setFailed] = useState(false);
   const props = node.props ?? {};
   const source = typeof props.source === "string" ? props.source : "";
-  if (source && !failed) return <img data-node={node.id} src={source} onError={() => setFailed(true)} style={{ ...style, objectFit: props.drawAs === "Box" ? "fill" : "contain", background: color(props.placeholderColor) }} />;
+  if (source && !failed) return <img data-node={node.id} src={source} onError={() => setFailed(true)} style={{ ...style, objectFit: props.drawAs === "box" ? "fill" : "contain", background: color(props.placeholderColor) }} />;
   return <div data-node={node.id} className="image-placeholder" style={{ ...style, background: color(props.placeholderColor) ?? "#566176", color: color(props.tint) ?? "#dce4f0" }}>{String(props.placeholderLabel ?? "")}</div>;
 }
 
@@ -110,7 +111,21 @@ function slotStyle(node: UiNode, parentType?: UiNode["type"]): CSSProperties {
   const slot = node.slot;
   if (!slot) return { position: "relative", width: "100%", height: "100%" };
   if (parentType === "Canvas" && "position" in slot && "size" in slot) {
-    return { position: "absolute", left: slot.position[0], top: slot.position[1], width: slot.size[0], height: slot.size[1], zIndex: slot.zOrder, boxSizing: "border-box" };
+    const anchors = slot.anchors ?? [0, 0, 0, 0];
+    const horizontalStretch = anchors[0] !== anchors[2];
+    const verticalStretch = anchors[1] !== anchors[3];
+    return {
+      position: "absolute",
+      left: `calc(${anchors[0] * 100}% + ${slot.position[0]}px)`,
+      top: `calc(${anchors[1] * 100}% + ${slot.position[1]}px)`,
+      right: horizontalStretch ? `calc(${(1 - anchors[2]) * 100}% + ${slot.size[0]}px)` : undefined,
+      bottom: verticalStretch ? `calc(${(1 - anchors[3]) * 100}% + ${slot.size[1]}px)` : undefined,
+      width: horizontalStretch ? undefined : slot.size[0],
+      height: verticalStretch ? undefined : slot.size[1],
+      transform: slot.alignment ? `translate(${horizontalStretch ? 0 : -slot.alignment[0] * 100}%, ${verticalStretch ? 0 : -slot.alignment[1] * 100}%)` : undefined,
+      zIndex: slot.zOrder,
+      boxSizing: "border-box",
+    };
   }
   const padding = "padding" in slot ? slot.padding ?? [0, 0, 0, 0] : [0, 0, 0, 0];
   if ((parentType === "HorizontalBox" || parentType === "VerticalBox") && "sizeRule" in slot) {
@@ -123,13 +138,20 @@ function slotStyle(node: UiNode, parentType?: UiNode["type"]): CSSProperties {
       alignSelf: crossAxisAlignment(slot, horizontal),
     };
   }
+  const horizontalAlign = "horizontalAlign" in slot ? slot.horizontalAlign ?? "fill" : "fill";
+  const verticalAlign = "verticalAlign" in slot ? slot.verticalAlign ?? "fill" : "fill";
+  const horizontalCenterOffset = (padding[0] - padding[2]) / 2;
+  const verticalCenterOffset = (padding[1] - padding[3]) / 2;
+  const translateX = horizontalAlign === "center" ? -50 : 0;
+  const translateY = verticalAlign === "center" ? -50 : 0;
   return {
     position: "absolute",
     boxSizing: "border-box",
-    left: padding[0],
-    top: padding[1],
-    right: padding[2],
-    bottom: padding[3],
+    left: horizontalAlign === "right" ? undefined : horizontalAlign === "center" ? `calc(50% + ${horizontalCenterOffset}px)` : padding[0],
+    right: horizontalAlign === "left" || horizontalAlign === "center" ? undefined : padding[2],
+    top: verticalAlign === "bottom" ? undefined : verticalAlign === "center" ? `calc(50% + ${verticalCenterOffset}px)` : padding[1],
+    bottom: verticalAlign === "top" || verticalAlign === "center" ? undefined : padding[3],
+    transform: translateX || translateY ? `translate(${translateX}%, ${translateY}%)` : undefined,
   };
 }
 
@@ -147,5 +169,12 @@ const color = (value: unknown) => typeof value === "string" ? value : undefined;
 const align = (value: unknown): CSSProperties["textAlign"] => value === "left" || value === "right" || value === "center" ? value : "left";
 const vertical = (value: unknown): CSSProperties["alignItems"] => value === "top" ? "flex-start" : value === "bottom" ? "flex-end" : "center";
 const justify = (value: unknown): CSSProperties["justifyContent"] => value === "right" ? "flex-end" : value === "center" ? "center" : "flex-start";
+const cssMargin = (value: unknown): CSSProperties["padding"] => {
+  if (typeof value === "number") return value;
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "number")) return undefined;
+  if (value.length === 2) return `${value[1]}px ${value[0]}px`;
+  if (value.length === 4) return `${value[1]}px ${value[2]}px ${value[3]}px ${value[0]}px`;
+  return undefined;
+};
 
 export type { UiPackage, ScreenFile, PreviewFile };

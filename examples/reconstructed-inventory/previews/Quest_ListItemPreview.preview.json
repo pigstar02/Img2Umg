@@ -1,0 +1,26 @@
+{
+  "format": "img2umg-preview",
+  "version": 1,
+  "entryTemplate": "Quest_ListItem",
+  "items": [
+    {
+      "overrides": [
+        { "target": "QuestName", "props": { "text": "Find the lost signal" } },
+        { "target": "QuestProgress", "props": { "percent": 0.75 } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "QuestName", "props": { "text": "Repair the gateway" } },
+        { "target": "QuestProgress", "props": { "percent": 0.4 } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "QuestName", "props": { "text": "Return to command" } },
+        { "target": "QuestProgress", "props": { "percent": 0.2 } }
+      ]
+    }
+  ]
+}
+

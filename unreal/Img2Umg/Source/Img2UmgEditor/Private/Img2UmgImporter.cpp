@@ -616,15 +616,24 @@ bool FImg2UmgImporter::ApplyWidgetProperties(UWidget* Widget, const FString& Typ
         if (!Img2Umg::OptionalColor(Props, TEXT("borderColor"), BorderColor, HasBorderColor, OutError)) return false;
         double BorderWidth = 0.0;
         const bool HasBorderWidth = Props->TryGetNumberField(TEXT("borderWidth"), BorderWidth);
-        if (HasBorderColor || HasBorderWidth)
+        double CornerRadius = 0.0;
+        const bool HasCornerRadius = Props->TryGetNumberField(TEXT("cornerRadius"), CornerRadius);
+        if (HasCornerRadius)
         {
-            if (!HasBorderColor || !HasBorderWidth || BorderWidth < 0.0) { OutError = TEXT("Border stroke requires both borderColor and a non-negative borderWidth."); return false; }
-            Used.Add(TEXT("borderColor")); Used.Add(TEXT("borderWidth"));
+            Used.Add(TEXT("cornerRadius"));
+            if (CornerRadius < 0.0) { OutError = TEXT("Border cornerRadius must be non-negative."); return false; }
+        }
+        if (HasBorderColor || HasBorderWidth || HasCornerRadius)
+        {
+            if (HasBorderColor != HasBorderWidth || BorderWidth < 0.0) { OutError = TEXT("Border stroke requires both borderColor and a non-negative borderWidth."); return false; }
+            if (HasBorderColor) { Used.Add(TEXT("borderColor")); Used.Add(TEXT("borderWidth")); }
             FSlateBrush Brush;
             Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
             Brush.TintColor = FSlateColor(Found ? Color : FLinearColor::White);
-            Brush.OutlineSettings.Color = BorderColor;
-            Brush.OutlineSettings.Width = BorderWidth;
+            Brush.OutlineSettings.Color = HasBorderColor ? FSlateColor(BorderColor) : FSlateColor(FLinearColor::Transparent);
+            Brush.OutlineSettings.Width = HasBorderWidth ? BorderWidth : 0.0;
+            Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+            Brush.OutlineSettings.CornerRadii = FVector4(CornerRadius, CornerRadius, CornerRadius, CornerRadius);
             Border->SetBrushColor(FLinearColor::White);
             Border->SetBrush(Brush);
         }
@@ -775,9 +784,31 @@ bool FImg2UmgImporter::ApplySlotProperties(UWidget* Widget, UPanelWidget* Parent
     if (UCanvasPanelSlot* Canvas = Cast<UCanvasPanelSlot>(Widget->Slot))
     {
         if (!Slot->HasField(TEXT("position")) || !Slot->HasField(TEXT("size"))) { OutError = TEXT("Canvas slots require position and size."); return false; }
+        TArray<double> Anchors{0.0, 0.0, 0.0, 0.0};
+        if (Slot->HasField(TEXT("anchors")))
+        {
+            Used.Add(TEXT("anchors"));
+            if (!Img2Umg::NumberArray(Slot, TEXT("anchors"), 4, Anchors, OutError)) return false;
+            if (Anchors[0] < 0.0 || Anchors[1] < 0.0 || Anchors[2] > 1.0 || Anchors[3] > 1.0 || Anchors[0] > Anchors[2] || Anchors[1] > Anchors[3])
+            {
+                OutError = TEXT("Canvas slot anchors must be ordered values from 0 to 1.");
+                return false;
+            }
+            Canvas->SetAnchors(FAnchors(Anchors[0], Anchors[1], Anchors[2], Anchors[3]));
+        }
         if (Slot->HasField(TEXT("position"))) { Used.Add(TEXT("position")); TArray<double> N; if (!Img2Umg::NumberArray(Slot, TEXT("position"), 2, N, OutError)) return false; Canvas->SetPosition(FVector2D(N[0], N[1])); }
-        if (Slot->HasField(TEXT("size"))) { Used.Add(TEXT("size")); TArray<double> N; if (!Img2Umg::NumberArray(Slot, TEXT("size"), 2, N, OutError)) return false; if (N[0] <= 0.0 || N[1] <= 0.0) { OutError = TEXT("Canvas slot size values must be positive."); return false; } Canvas->SetSize(FVector2D(N[0], N[1])); }
-        if (Slot->HasField(TEXT("anchors"))) { Used.Add(TEXT("anchors")); TArray<double> N; if (!Img2Umg::NumberArray(Slot, TEXT("anchors"), 4, N, OutError)) return false; Canvas->SetAnchors(FAnchors(N[0], N[1], N[2], N[3])); }
+        if (Slot->HasField(TEXT("size")))
+        {
+            Used.Add(TEXT("size"));
+            TArray<double> N;
+            if (!Img2Umg::NumberArray(Slot, TEXT("size"), 2, N, OutError)) return false;
+            if ((FMath::IsNearlyEqual(Anchors[0], Anchors[2]) && N[0] <= 0.0) || (FMath::IsNearlyEqual(Anchors[1], Anchors[3]) && N[1] <= 0.0))
+            {
+                OutError = TEXT("Canvas slot size must be positive on axes that do not stretch.");
+                return false;
+            }
+            Canvas->SetSize(FVector2D(N[0], N[1]));
+        }
         if (Slot->HasField(TEXT("alignment"))) { Used.Add(TEXT("alignment")); TArray<double> N; if (!Img2Umg::NumberArray(Slot, TEXT("alignment"), 2, N, OutError)) return false; Canvas->SetAlignment(FVector2D(N[0], N[1])); }
         if (Slot->TryGetBoolField(TEXT("autoSize"), Boolean)) { Used.Add(TEXT("autoSize")); Canvas->SetAutoSize(Boolean); }
         if (Slot->TryGetNumberField(TEXT("zOrder"), Number)) { Used.Add(TEXT("zOrder")); if (!FMath::IsNearlyEqual(Number, static_cast<double>(FMath::RoundToInt(Number)))) { OutError = TEXT("zOrder must be an integer."); return false; } Canvas->SetZOrder(FMath::RoundToInt(Number)); }
@@ -800,10 +831,17 @@ bool FImg2UmgImporter::ApplySlotProperties(UWidget* Widget, UPanelWidget* Parent
         if (Slot->TryGetStringField(TEXT("horizontalAlign"), String)) { Used.Add(TEXT("horizontalAlign")); bool Valid; HAlign = Img2Umg::HorizontalAlignment(String, Valid); if (!Valid) { OutError = FString::Printf(TEXT("Unknown horizontalAlign '%s'."), *String); return false; } }
         if (Slot->TryGetStringField(TEXT("verticalAlign"), String)) { Used.Add(TEXT("verticalAlign")); bool Valid; VAlign = Img2Umg::VerticalAlignment(String, Valid); if (!Valid) { OutError = FString::Printf(TEXT("Unknown verticalAlign '%s'."), *String); return false; } }
 
-        if (UOverlaySlot* S = Cast<UOverlaySlot>(Widget->Slot)) { if (HasPadding) S->SetPadding(Padding); S->SetHorizontalAlignment(HAlign); S->SetVerticalAlignment(VAlign); }
-        else if (UHorizontalBoxSlot* S = Cast<UHorizontalBoxSlot>(Widget->Slot))
+        if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Widget->Slot))
         {
-            if (HasPadding) S->SetPadding(Padding); S->SetHorizontalAlignment(HAlign); S->SetVerticalAlignment(VAlign);
+            if (HasPadding) OverlaySlot->SetPadding(Padding);
+            OverlaySlot->SetHorizontalAlignment(HAlign);
+            OverlaySlot->SetVerticalAlignment(VAlign);
+        }
+        else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+        {
+            if (HasPadding) HorizontalBoxSlot->SetPadding(Padding);
+            HorizontalBoxSlot->SetHorizontalAlignment(HAlign);
+            HorizontalBoxSlot->SetVerticalAlignment(VAlign);
             if (!Slot->HasField(TEXT("sizeRule"))) { OutError = TEXT("HorizontalBox slots require sizeRule."); return false; }
             if (Slot->TryGetStringField(TEXT("sizeRule"), String))
             {
@@ -818,13 +856,15 @@ bool FImg2UmgImporter::ApplySlotProperties(UWidget* Widget, UPanelWidget* Parent
                     if (String != TEXT("fill") || Number <= 0.0) { OutError = TEXT("'fill' must be positive and requires sizeRule 'fill'."); return false; }
                     ChildSize.Value = Number;
                 }
-                S->SetSize(ChildSize);
+                HorizontalBoxSlot->SetSize(ChildSize);
             }
             else if (Slot->HasField(TEXT("fill"))) { OutError = TEXT("'fill' requires sizeRule 'fill'."); return false; }
         }
-        else if (UVerticalBoxSlot* S = Cast<UVerticalBoxSlot>(Widget->Slot))
+        else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
         {
-            if (HasPadding) S->SetPadding(Padding); S->SetHorizontalAlignment(HAlign); S->SetVerticalAlignment(VAlign);
+            if (HasPadding) VerticalBoxSlot->SetPadding(Padding);
+            VerticalBoxSlot->SetHorizontalAlignment(HAlign);
+            VerticalBoxSlot->SetVerticalAlignment(VAlign);
             if (!Slot->HasField(TEXT("sizeRule"))) { OutError = TEXT("VerticalBox slots require sizeRule."); return false; }
             if (Slot->TryGetStringField(TEXT("sizeRule"), String))
             {
@@ -839,14 +879,46 @@ bool FImg2UmgImporter::ApplySlotProperties(UWidget* Widget, UPanelWidget* Parent
                     if (String != TEXT("fill") || Number <= 0.0) { OutError = TEXT("'fill' must be positive and requires sizeRule 'fill'."); return false; }
                     ChildSize.Value = Number;
                 }
-                S->SetSize(ChildSize);
+                VerticalBoxSlot->SetSize(ChildSize);
             }
             else if (Slot->HasField(TEXT("fill"))) { OutError = TEXT("'fill' requires sizeRule 'fill'."); return false; }
         }
-        else if (UBorderSlot* S = Cast<UBorderSlot>(Widget->Slot)) { if (HasPadding) S->SetPadding(Padding); S->SetHorizontalAlignment(HAlign); S->SetVerticalAlignment(VAlign); }
-        else if (UButtonSlot* S = Cast<UButtonSlot>(Widget->Slot)) { if (HasPadding) S->SetPadding(Padding); S->SetHorizontalAlignment(HAlign); S->SetVerticalAlignment(VAlign); }
-        else if (USizeBoxSlot* S = Cast<USizeBoxSlot>(Widget->Slot)) { if (HasPadding) S->SetPadding(Padding); S->SetHorizontalAlignment(HAlign); S->SetVerticalAlignment(VAlign); }
-        else if (UScaleBoxSlot* S = Cast<UScaleBoxSlot>(Widget->Slot)) { if (HasPadding) S->SetPadding(Padding); S->SetHorizontalAlignment(HAlign); S->SetVerticalAlignment(VAlign); }
+        else if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
+        {
+            if (HasPadding) BorderSlot->SetPadding(Padding);
+            BorderSlot->SetHorizontalAlignment(HAlign);
+            BorderSlot->SetVerticalAlignment(VAlign);
+        }
+        else if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(Widget->Slot))
+        {
+            if (HasPadding) ButtonSlot->SetPadding(Padding);
+            ButtonSlot->SetHorizontalAlignment(HAlign);
+            ButtonSlot->SetVerticalAlignment(VAlign);
+        }
+        else if (USizeBoxSlot* SizeBoxSlot = Cast<USizeBoxSlot>(Widget->Slot))
+        {
+            if (HasPadding) SizeBoxSlot->SetPadding(Padding);
+            SizeBoxSlot->SetHorizontalAlignment(HAlign);
+            SizeBoxSlot->SetVerticalAlignment(VAlign);
+        }
+        else if (UScaleBoxSlot* ScaleBoxSlot = Cast<UScaleBoxSlot>(Widget->Slot))
+        {
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 1
+            if (HasPadding) ScaleBoxSlot->SetPadding(Padding);
+#else
+            const bool bHasNonZeroPadding = !FMath::IsNearlyZero(Padding.Left)
+                || !FMath::IsNearlyZero(Padding.Top)
+                || !FMath::IsNearlyZero(Padding.Right)
+                || !FMath::IsNearlyZero(Padding.Bottom);
+            if (HasPadding && bHasNonZeroPadding)
+            {
+                OutError = TEXT("ScaleBox slots do not support padding in Unreal Engine 5.1 or newer. Add a wrapper container for padding.");
+                return false;
+            }
+#endif
+            ScaleBoxSlot->SetHorizontalAlignment(HAlign);
+            ScaleBoxSlot->SetVerticalAlignment(VAlign);
+        }
         else { OutError = FString::Printf(TEXT("Unsupported slot type under parent '%s'."), *Parent->GetClass()->GetName()); return false; }
     }
     return ValidateUnused(Slot, Used, TEXT("slot"), OutError);

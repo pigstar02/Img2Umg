@@ -26,7 +26,7 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
       id: visual.id,
       type: visual.type,
       ...(visual.props ? { props: structuredClone(visual.props) } : {}),
-      ...(!root && parentType && parentBounds ? { slot: slotFor(visual.bounds, parentBounds, parentType) } : {}),
+      ...(!root && parentType && parentBounds ? { slot: slotFor(visual.bounds, parentBounds, parentType, config.alignmentTolerance) } : {}),
     };
     if (!visual.children?.length) return node;
 
@@ -51,7 +51,7 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
         version: FORMAT_VERSION,
         id: baseName,
         size: [template.bounds.width, template.bounds.height],
-        root: convertEntry(normalized),
+        root: convertEntry(normalized, true, undefined, undefined, config.alignmentTolerance),
       };
       previews[previewFile] = {
         format: "img2umg-preview",
@@ -70,7 +70,7 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
           spacing: pattern.spacing,
           ...(pattern.type === "ListView" ? { orientation: pattern.columns === 1 ? "vertical" : "horizontal" } : { columns: pattern.columns }),
         },
-        slot: slotFor(area, visual.bounds, visual.type),
+        slot: slotFor(area, visual.bounds, visual.type, config.alignmentTolerance),
       });
       index += run.length;
     }
@@ -177,13 +177,13 @@ function normalizeTree(node: VisualNode, origin = node.bounds): VisualNode {
   };
 }
 
-function convertEntry(node: VisualNode, root = true, parentType?: NodeType, parentBounds?: Bounds): UiNode {
+function convertEntry(node: VisualNode, root = true, parentType?: NodeType, parentBounds?: Bounds, edgeTolerance = defaults.alignmentTolerance): UiNode {
   return {
     id: node.id,
     type: node.type,
     ...(node.props ? { props: structuredClone(node.props) } : {}),
-    ...(!root && parentType && parentBounds ? { slot: slotFor(node.bounds, parentBounds, parentType) } : {}),
-    ...(node.children?.length ? { children: node.children.map((child) => convertEntry(child, false, node.type, node.bounds)) } : {}),
+    ...(!root && parentType && parentBounds ? { slot: slotFor(node.bounds, parentBounds, parentType, edgeTolerance) } : {}),
+    ...(node.children?.length ? { children: node.children.map((child) => convertEntry(child, false, node.type, node.bounds, edgeTolerance)) } : {}),
   };
 }
 
@@ -204,16 +204,35 @@ function collectOverrides(template: VisualNode, item: VisualNode): PreviewOverri
   return overrides;
 }
 
-function slotFor(bounds: Bounds, parent: Bounds, parentType: NodeType): UiSlot {
+function slotFor(bounds: Bounds, parent: Bounds, parentType: NodeType, edgeTolerance = defaults.alignmentTolerance): UiSlot {
   const left = bounds.x - parent.x;
   const top = bounds.y - parent.y;
-  if (parentType === "Canvas") return { position: [left, top], size: [bounds.width, bounds.height] };
+  if (parentType === "Canvas") {
+    const horizontal = inferAxisAnchor(left, bounds.width, parent.width, edgeTolerance);
+    const vertical = inferAxisAnchor(top, bounds.height, parent.height, edgeTolerance);
+    return {
+      position: [horizontal.position, vertical.position],
+      size: [horizontal.size, vertical.size],
+      anchors: [horizontal.min, vertical.min, horizontal.max, vertical.max],
+    };
+  }
   if (parentType === "HorizontalBox" || parentType === "VerticalBox") return { sizeRule: "auto", padding: [0, 0, 0, 0], horizontalAlign: "fill", verticalAlign: "fill" };
   return {
     padding: [left, top, parent.width - left - bounds.width, parent.height - top - bounds.height],
     horizontalAlign: "fill",
     verticalAlign: "fill",
   };
+}
+
+function inferAxisAnchor(start: number, length: number, parentLength: number, edgeTolerance: number) {
+  const end = parentLength - start - length;
+  if (Math.abs(start) <= edgeTolerance && Math.abs(end) <= edgeTolerance) {
+    return { min: 0, max: 1, position: start, size: end };
+  }
+
+  const centerRatio = (start + length / 2) / parentLength;
+  const anchor = centerRatio < 1 / 3 ? 0 : centerRatio > 2 / 3 ? 1 : 0.5;
+  return { min: anchor, max: anchor, position: start - parentLength * anchor, size: length };
 }
 
 function unionBounds(bounds: Bounds[]): Bounds {

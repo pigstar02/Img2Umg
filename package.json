@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "extract": "node --import tsx src/cli/extract.ts",
+    "validate": "node --import tsx src/cli/validate-package.ts",
     "check": "npm run test && npm run build"
   },
   "dependencies": {
