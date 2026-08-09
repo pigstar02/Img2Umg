@@ -1,0 +1,18 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "Img2Umg",
+  "Description": "Imports constrained Img2Umg JSON packages as UMG Widget Blueprints.",
+  "Category": "Editor",
+  "CreatedBy": "Img2Umg",
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Modules": [
+    {
+      "Name": "Img2UmgEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

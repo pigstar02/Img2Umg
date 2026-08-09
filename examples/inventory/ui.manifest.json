@@ -1,0 +1,13 @@
+{
+  "format": "img2umg-package",
+  "version": 1,
+  "screens": [{ "id": "Inventory", "file": "screens/Inventory.screen.json" }],
+  "entries": [
+    { "id": "Quest_ListItem", "file": "entries/Quest_ListItem.entry.json" },
+    { "id": "Inventory_TileItem", "file": "entries/Inventory_TileItem.entry.json" }
+  ],
+  "previews": [
+    { "id": "Quest_ListItemPreview", "file": "previews/Quest_ListItemPreview.preview.json" },
+    { "id": "Inventory_TileItemPreview", "file": "previews/Inventory_TileItemPreview.preview.json" }
+  ]
+}

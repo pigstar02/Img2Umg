@@ -1,0 +1,23 @@
+{
+  "screenId": "QuestLog",
+  "canvas": { "width": 800, "height": 600 },
+  "root": {
+    "id": "QuestLog",
+    "type": "Canvas",
+    "bounds": { "x": 0, "y": 0, "width": 800, "height": 600 },
+    "children": [
+      {
+        "id": "QuestA", "type": "Border", "bounds": { "x": 100, "y": 100, "width": 300, "height": 80 }, "props": { "backgroundColor": "#24314AFF" },
+        "children": [{ "id": "QuestName", "type": "Text", "bounds": { "x": 120, "y": 116, "width": 240, "height": 48 }, "props": { "text": "Signal", "fontSize": 18, "color": "#FFFFFFFF" } }]
+      },
+      {
+        "id": "QuestB", "type": "Border", "bounds": { "x": 100, "y": 196, "width": 300, "height": 80 }, "props": { "backgroundColor": "#24314AFF" },
+        "children": [{ "id": "QuestName", "type": "Text", "bounds": { "x": 120, "y": 212, "width": 240, "height": 48 }, "props": { "text": "Gateway", "fontSize": 18, "color": "#FFFFFFFF" } }]
+      },
+      {
+        "id": "QuestC", "type": "Border", "bounds": { "x": 100, "y": 292, "width": 300, "height": 80 }, "props": { "backgroundColor": "#24314AFF" },
+        "children": [{ "id": "QuestName", "type": "Text", "bounds": { "x": 120, "y": 308, "width": 240, "height": 48 }, "props": { "text": "Command", "fontSize": 18, "color": "#FFFFFFFF" } }]
+      }
+    ]
+  }
+}

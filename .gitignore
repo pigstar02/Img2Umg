@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+dist/
+*.tsbuildinfo
+unreal/build/
+unreal/TestHost/Binaries/
+unreal/TestHost/DerivedDataCache/
+unreal/TestHost/Intermediate/
+unreal/TestHost/Saved/
+unreal/TestHost/Content/Img2Umg/

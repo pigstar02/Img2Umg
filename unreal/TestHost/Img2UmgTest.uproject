@@ -1,0 +1,15 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.7",
+  "Category": "",
+  "Description": "Host project for compiling and testing the Img2Umg editor plugin.",
+  "AdditionalPluginDirectories": [
+    ".."
+  ],
+  "Plugins": [
+    {
+      "Name": "Img2Umg",
+      "Enabled": true
+    }
+  ]
+}
