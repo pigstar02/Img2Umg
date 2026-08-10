@@ -1,0 +1,190 @@
+{
+  "format": "img2umg-entry",
+  "version": 1,
+  "id": "StatusDetailItem",
+  "size": [784, 48],
+  "root": {
+    "id": "DetailState",
+    "type": "WidgetSwitcher",
+    "isVariable": true,
+    "props": {
+      "activeWidgetIndex": 0
+    },
+    "children": [
+      {
+        "id": "TextOnlyState",
+        "type": "SizeBox",
+        "props": {
+          "heightOverride": 48
+        },
+        "slot": {
+          "padding": [0, 0, 0, 0],
+          "horizontalAlign": "fill",
+          "verticalAlign": "fill"
+        },
+        "children": [
+          {
+            "id": "TextOnlyCanvas",
+            "type": "Canvas",
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill"
+            },
+            "children": [
+              {
+                "id": "StatusText",
+                "type": "Text",
+                "isVariable": true,
+                "props": {
+                  "text": "普通货光仔有1只，躺椅够3只使用，还顺利",
+                  "fontSize": 20,
+                  "color": "#DFE0DBFF",
+                  "horizontalAlign": "left",
+                  "verticalAlign": "center",
+                  "wrap": false
+                },
+                "slot": {
+                  "position": [0, 0],
+                  "size": [0, 1],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 1
+                }
+              },
+              {
+                "id": "TextDivider",
+                "type": "Border",
+                "props": {
+                  "backgroundColor": "#78807770",
+                  "padding": 0
+                },
+                "slot": {
+                  "position": [0, -1],
+                  "size": [0, 1],
+                  "anchors": [0, 1, 1, 1],
+                  "alignment": [0, 1],
+                  "zOrder": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ActionableState",
+        "type": "SizeBox",
+        "props": {
+          "heightOverride": 54
+        },
+        "slot": {
+          "padding": [0, 0, 0, 0],
+          "horizontalAlign": "fill",
+          "verticalAlign": "fill"
+        },
+        "children": [
+          {
+            "id": "ActionableCanvas",
+            "type": "Canvas",
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill"
+            },
+            "children": [
+              {
+                "id": "ResidentAvatar",
+                "type": "Image",
+                "isVariable": true,
+                "props": {
+                  "source": null,
+                  "placeholderColor": "#C8B17FFF",
+                  "tint": "#FFFFFFFF"
+                },
+                "slot": {
+                  "position": [0, 0],
+                  "size": [40, 40],
+                  "anchors": [0, 0.5, 0, 0.5],
+                  "alignment": [0, 0.5],
+                  "zOrder": 1
+                }
+              },
+              {
+                "id": "ResidentStatusText",
+                "type": "Text",
+                "isVariable": true,
+                "props": {
+                  "text": "光仔小黑子饿了",
+                  "fontSize": 21,
+                  "color": "#FF795AFF",
+                  "horizontalAlign": "left",
+                  "verticalAlign": "center",
+                  "wrap": false
+                },
+                "slot": {
+                  "position": [52, 0],
+                  "size": [240, 0],
+                  "anchors": [0, 0, 0, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 1
+                }
+              },
+              {
+                "id": "ActionHintText",
+                "type": "Text",
+                "props": {
+                  "text": "，需要喂食",
+                  "fontSize": 20,
+                  "color": "#E5E5DFFF",
+                  "horizontalAlign": "left",
+                  "verticalAlign": "center",
+                  "wrap": false
+                },
+                "slot": {
+                  "position": [292, 0],
+                  "size": [160, 0],
+                  "anchors": [0, 0, 0, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 1
+                }
+              },
+              {
+                "id": "ActionButton",
+                "type": "Button",
+                "isVariable": true,
+                "props": {
+                  "label": "去喂食",
+                  "backgroundColor": "#6385F6FF",
+                  "textColor": "#263B85FF",
+                  "fontSize": 21
+                },
+                "slot": {
+                  "position": [-2, 0],
+                  "size": [154, 42],
+                  "anchors": [1, 0.5, 1, 0.5],
+                  "alignment": [1, 0.5],
+                  "zOrder": 2
+                }
+              },
+              {
+                "id": "ActionDivider",
+                "type": "Border",
+                "props": {
+                  "backgroundColor": "#78807770",
+                  "padding": 0
+                },
+                "slot": {
+                  "position": [0, -1],
+                  "size": [0, 1],
+                  "anchors": [0, 1, 1, 1],
+                  "alignment": [0, 1],
+                  "zOrder": 0
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

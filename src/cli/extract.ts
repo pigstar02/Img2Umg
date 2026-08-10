@@ -43,7 +43,7 @@ function validateVisualInput(value: unknown): VisualInput {
 function validateVisualNode(value: unknown, path: string, errors: string[]) {
   if (!isObject(value)) return errors.push(`${path}: expected object`);
   if (typeof value.id !== "string" || !value.id) errors.push(`${path}.id: expected non-empty string`);
-  const types = ["Canvas", "Overlay", "HorizontalBox", "VerticalBox", "SizeBox", "ScaleBox", "Spacer", "Border", "Image", "Text", "Button", "ProgressBar"];
+  const types = ["Canvas", "Overlay", "HorizontalBox", "VerticalBox", "WidgetSwitcher", "SizeBox", "ScaleBox", "Spacer", "Border", "Image", "Text", "Button", "ProgressBar"];
   if (typeof value.type !== "string" || !types.includes(value.type)) errors.push(`${path}.type: unsupported visual node type`);
   if (!isObject(value.bounds) || !finite(value.bounds.x) || !finite(value.bounds.y) || !positive(value.bounds.width) || !positive(value.bounds.height)) errors.push(`${path}.bounds: x/y must be finite and width/height positive`);
   if (value.props !== undefined && !isObject(value.props)) errors.push(`${path}.props: expected object`);

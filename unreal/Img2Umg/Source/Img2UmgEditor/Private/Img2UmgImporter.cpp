@@ -27,6 +27,8 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/Widget.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/WidgetSwitcherSlot.h"
 #include "Engine/Texture2D.h"
 #include "Engine/UserInterfaceSettings.h"
 #include "WidgetBlueprintFactory.h"
@@ -166,6 +168,18 @@ static bool SetObjectProperty(UObject* Object, const TCHAR* PropertyName, UObjec
 static bool SetIntProperty(UObject* Object, const TCHAR* PropertyName, int32 Value, FString& Error)
 {
     FIntProperty* Property = FindFProperty<FIntProperty>(Object->GetClass(), PropertyName);
+    if (!Property)
+    {
+        Error = FString::Printf(TEXT("This Unreal version does not expose property '%s' on %s."), PropertyName, *Object->GetClass()->GetName());
+        return false;
+    }
+    Property->SetPropertyValue_InContainer(Object, Value);
+    return true;
+}
+
+static bool SetFloatProperty(UObject* Object, const TCHAR* PropertyName, float Value, FString& Error)
+{
+    FFloatProperty* Property = FindFProperty<FFloatProperty>(Object->GetClass(), PropertyName);
     if (!Property)
     {
         Error = FString::Printf(TEXT("This Unreal version does not expose property '%s' on %s."), PropertyName, *Object->GetClass()->GetName());
@@ -394,6 +408,12 @@ bool FImg2UmgImporter::CreateWidgetBlueprint(const FString& Id, const TSharedPtr
     }
     else
     {
+        FString RootType;
+        if (!Img2Umg::RequiredString(*Root, TEXT("type"), RootType, OutError) || RootType != TEXT("Canvas"))
+        {
+            OutError = TEXT("Screen root widget must use type 'Canvas'.");
+            return false;
+        }
         const TSharedPtr<FJsonObject>* Canvas = nullptr;
         if (!Document->TryGetObjectField(TEXT("canvas"), Canvas) || !Canvas || !Canvas->IsValid())
         {
@@ -405,6 +425,11 @@ bool FImg2UmgImporter::CreateWidgetBlueprint(const FString& Id, const TSharedPtr
         if (!(*Canvas)->TryGetNumberField(TEXT("width"), Width) || !(*Canvas)->TryGetNumberField(TEXT("height"), Height) || Width <= 0.0 || Height <= 0.0)
         {
             OutError = TEXT("Canvas width and height must be positive numbers.");
+            return false;
+        }
+        if (!FMath::IsNearlyEqual(Width, 1920.0) || !FMath::IsNearlyEqual(Height, 1080.0))
+        {
+            OutError = TEXT("Screen canvas must use the fixed 1920x1080 design size.");
             return false;
         }
         const TSet<FString> CanvasFields{TEXT("width"), TEXT("height")};
@@ -455,7 +480,8 @@ bool FImg2UmgImporter::BuildWidget(UWidgetBlueprint* Blueprint, UWidgetTree* Tre
     static const TMap<FString, UClass*> Types = {
         {TEXT("Canvas"), UCanvasPanel::StaticClass()},
         {TEXT("Overlay"), UOverlay::StaticClass()}, {TEXT("HorizontalBox"), UHorizontalBox::StaticClass()},
-        {TEXT("VerticalBox"), UVerticalBox::StaticClass()}, {TEXT("SizeBox"), USizeBox::StaticClass()},
+        {TEXT("VerticalBox"), UVerticalBox::StaticClass()}, {TEXT("WidgetSwitcher"), UWidgetSwitcher::StaticClass()},
+        {TEXT("SizeBox"), USizeBox::StaticClass()},
         {TEXT("ScaleBox"), UScaleBox::StaticClass()}, {TEXT("Border"), UBorder::StaticClass()},
         {TEXT("Image"), UImage::StaticClass()}, {TEXT("Text"), UTextBlock::StaticClass()},
         {TEXT("Button"), UButton::StaticClass()}, {TEXT("ProgressBar"), UProgressBar::StaticClass()},
@@ -474,6 +500,14 @@ bool FImg2UmgImporter::BuildWidget(UWidgetBlueprint* Blueprint, UWidgetTree* Tre
         OutError = FString::Printf(TEXT("Could not construct widget '%s'."), *Id);
         return false;
     }
+
+    bool bIsVariable = false;
+    if (Node->HasField(TEXT("isVariable")) && !Node->TryGetBoolField(TEXT("isVariable"), bIsVariable))
+    {
+        OutError = FString::Printf(TEXT("Widget '%s' field 'isVariable' must be a boolean."), *Id);
+        return false;
+    }
+    OutWidget->bIsVariable = bIsVariable;
 
     if (Parent)
     {
@@ -566,13 +600,39 @@ bool FImg2UmgImporter::BuildWidget(UWidgetBlueprint* Blueprint, UWidgetTree* Tre
             if (!BuildWidget(Blueprint, Tree, *ChildObject, Panel, Child, OutError)) return false;
         }
     }
+    if (UWidgetSwitcher* Switcher = Cast<UWidgetSwitcher>(OutWidget))
+    {
+        if (Switcher->GetNumWidgets() == 0)
+        {
+            OutError = FString::Printf(TEXT("WidgetSwitcher '%s' requires at least one child."), *Id);
+            return false;
+        }
+        double ActiveWidgetIndex = 0.0;
+        Props->TryGetNumberField(TEXT("activeWidgetIndex"), ActiveWidgetIndex);
+        const int32 Index = FMath::RoundToInt(ActiveWidgetIndex);
+        if (Index >= Switcher->GetNumWidgets())
+        {
+            OutError = FString::Printf(TEXT("WidgetSwitcher '%s' activeWidgetIndex must be below child count %d."), *Id, Switcher->GetNumWidgets());
+            return false;
+        }
+        Switcher->SetActiveWidgetIndex(Index);
+    }
 
-    const TSet<FString> NodeFields{TEXT("id"), TEXT("type"), TEXT("props"), TEXT("slot"), TEXT("children")};
+    const TSet<FString> NodeFields{TEXT("id"), TEXT("type"), TEXT("isVariable"), TEXT("props"), TEXT("slot"), TEXT("children")};
     return ValidateUnused(Node, NodeFields, FString::Printf(TEXT("widget '%s'"), *Id), OutError);
 }
 
 bool FImg2UmgImporter::ApplyCommonProperties(UWidget* Widget, const TSharedPtr<FJsonObject>& Props, TSet<FString>& Used, FString& OutError)
 {
+    FString Visibility;
+    if (Props->TryGetStringField(TEXT("visibility"), Visibility))
+    {
+        Used.Add(TEXT("visibility"));
+        if (Visibility == TEXT("visible")) Widget->SetVisibility(ESlateVisibility::Visible);
+        else if (Visibility == TEXT("hidden")) Widget->SetVisibility(ESlateVisibility::Hidden);
+        else if (Visibility == TEXT("collapsed")) Widget->SetVisibility(ESlateVisibility::Collapsed);
+        else { OutError = FString::Printf(TEXT("Unknown visibility '%s'."), *Visibility); return false; }
+    }
     return true;
 }
 
@@ -603,6 +663,18 @@ bool FImg2UmgImporter::ApplyWidgetProperties(UWidget* Widget, const FString& Typ
             else if (String == TEXT("scaleToFitX")) ScaleBox->SetStretch(EStretch::ScaleToFitX);
             else if (String == TEXT("scaleToFitY")) ScaleBox->SetStretch(EStretch::ScaleToFitY);
             else { OutError = FString::Printf(TEXT("Unknown stretch '%s'."), *String); return false; }
+        }
+    }
+    else if (Cast<UWidgetSwitcher>(Widget))
+    {
+        if (Props->TryGetNumberField(TEXT("activeWidgetIndex"), Number))
+        {
+            Used.Add(TEXT("activeWidgetIndex"));
+            if (Number < 0.0 || !FMath::IsNearlyEqual(Number, static_cast<double>(FMath::RoundToInt(Number))))
+            {
+                OutError = TEXT("WidgetSwitcher activeWidgetIndex must be a non-negative integer.");
+                return false;
+            }
         }
     }
     else if (UBorder* Border = Cast<UBorder>(Widget))
@@ -744,7 +816,14 @@ bool FImg2UmgImporter::ApplyWidgetProperties(UWidget* Widget, const FString& Typ
             else if (String == TEXT("horizontal")) { if (!Img2Umg::SetByteProperty(List, TEXT("Orientation"), Orient_Horizontal, OutError)) return false; }
             else { OutError = FString::Printf(TEXT("Unknown orientation '%s'."), *String); return false; }
         }
-        if (!Props->HasField(TEXT("entrySize"))) { OutError = TEXT("ListView and TileView require 'entrySize'."); return false; }
+        bool bSizeToContent = false;
+        if (Props->TryGetBoolField(TEXT("sizeToContent"), bSizeToContent))
+        {
+            Used.Add(TEXT("sizeToContent"));
+            if (Cast<UTileView>(List)) { OutError = TEXT("'sizeToContent' is valid only for ListView."); return false; }
+        }
+        if (!Props->HasField(TEXT("entrySize")) && (Cast<UTileView>(List) || !bSizeToContent)) { OutError = TEXT("ListView and TileView require 'entrySize' unless ListView uses sizeToContent."); return false; }
+        if (Props->HasField(TEXT("entrySize")))
         {
             Used.Add(TEXT("entrySize"));
             TArray<double> N; if (!Img2Umg::NumberArray(Props, TEXT("entrySize"), 2, N, OutError)) return false;
@@ -757,8 +836,8 @@ bool FImg2UmgImporter::ApplyWidgetProperties(UWidget* Widget, const FString& Typ
             if (N[0] < 0.0 || N[1] < 0.0) { OutError = TEXT("List spacing cannot be negative."); return false; }
             if (UListView* ConcreteList = Cast<UListView>(List))
             {
-                ConcreteList->SetHorizontalEntrySpacing(N[0]);
-                ConcreteList->SetVerticalEntrySpacing(N[1]);
+                if (!Img2Umg::SetFloatProperty(ConcreteList, TEXT("HorizontalEntrySpacing"), static_cast<float>(N[0]), OutError)
+                    || !Img2Umg::SetFloatProperty(ConcreteList, TEXT("VerticalEntrySpacing"), static_cast<float>(N[1]), OutError)) return false;
             }
         }
         if (Props->TryGetNumberField(TEXT("columns"), Number))
@@ -836,6 +915,12 @@ bool FImg2UmgImporter::ApplySlotProperties(UWidget* Widget, UPanelWidget* Parent
             if (HasPadding) OverlaySlot->SetPadding(Padding);
             OverlaySlot->SetHorizontalAlignment(HAlign);
             OverlaySlot->SetVerticalAlignment(VAlign);
+        }
+        else if (UWidgetSwitcherSlot* SwitcherSlot = Cast<UWidgetSwitcherSlot>(Widget->Slot))
+        {
+            if (HasPadding) SwitcherSlot->SetPadding(Padding);
+            SwitcherSlot->SetHorizontalAlignment(HAlign);
+            SwitcherSlot->SetVerticalAlignment(VAlign);
         }
         else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
         {
@@ -1029,8 +1114,17 @@ int32 FImg2UmgImporter::ReadPreviewCount(const FString& PreviewId, const FString
             OutError = FString::Printf(TEXT("Preview '%s' items[%d] must be an object."), *PreviewId, ItemIndex);
             return -1;
         }
-        const TSet<FString> ItemFields{TEXT("overrides")};
+        const TSet<FString> ItemFields{TEXT("size"), TEXT("overrides")};
         if (!ValidateUnused(*Item, ItemFields, FString::Printf(TEXT("preview '%s' item %d"), *PreviewId, ItemIndex), OutError)) return -1;
+        if ((*Item)->HasField(TEXT("size")))
+        {
+            TArray<double> ItemSize;
+            if (!Img2Umg::NumberArray(*Item, TEXT("size"), 2, ItemSize, OutError) || ItemSize[0] <= 0.0 || ItemSize[1] <= 0.0)
+            {
+                if (OutError.IsEmpty()) OutError = FString::Printf(TEXT("Preview '%s' items[%d].size must contain two positive numbers."), *PreviewId, ItemIndex);
+                return -1;
+            }
+        }
         const TArray<TSharedPtr<FJsonValue>>* Overrides = nullptr;
         if (!(*Item)->TryGetArrayField(TEXT("overrides"), Overrides) || !Overrides)
         {

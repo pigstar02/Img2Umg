@@ -1,0 +1,31 @@
+{
+  "format": "img2umg-preview",
+  "version": 1,
+  "entryTemplate": "StatusBubbleItem",
+  "items": [
+    {
+      "size": [908, 84],
+      "overrides": [
+        { "target": "StatusLabel", "props": { "text": "精力" } },
+        { "target": "StatusIcon", "props": { "placeholderColor": "#45D8EFFF" } },
+        { "target": "DetailList", "props": { "preview": "EnergyStatusDetails" } }
+      ]
+    },
+    {
+      "size": [908, 104],
+      "overrides": [
+        { "target": "StatusLabel", "props": { "text": "心情" } },
+        { "target": "StatusIcon", "props": { "placeholderColor": "#FF9144FF" } },
+        { "target": "DetailList", "props": { "preview": "MoodStatusDetails" } }
+      ]
+    },
+    {
+      "size": [908, 218],
+      "overrides": [
+        { "target": "StatusLabel", "props": { "text": "饱食" } },
+        { "target": "StatusIcon", "props": { "placeholderColor": "#EFD982FF" } },
+        { "target": "DetailList", "props": { "preview": "HungerStatusDetails" } }
+      ]
+    }
+  ]
+}

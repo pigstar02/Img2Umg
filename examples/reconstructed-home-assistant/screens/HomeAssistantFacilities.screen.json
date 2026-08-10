@@ -1,0 +1,360 @@
+{
+  "format": "img2umg-screen",
+  "version": 1,
+  "id": "HomeAssistantFacilities",
+  "canvas": { "width": 1920, "height": 1080 },
+  "root": {
+    "id": "ScreenRoot",
+    "type": "Canvas",
+    "children": [
+      {
+        "id": "SceneBackground",
+        "type": "Image",
+        "props": {
+          "source": null,
+          "placeholderColor": "#24351FFF",
+          "tint": "#FFFFFFFF"
+        },
+        "slot": {
+          "position": [0, 0],
+          "size": [0, 0],
+          "anchors": [0, 0, 1, 1],
+          "alignment": [0, 0],
+          "zOrder": 0
+        }
+      },
+      {
+        "id": "BrandModule",
+        "type": "Canvas",
+        "slot": {
+          "position": [128, 38],
+          "size": [300, 68],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 2
+        },
+        "children": [
+          {
+            "id": "BrandMark",
+            "type": "Image",
+            "props": {
+              "source": null,
+              "placeholderColor": "#67D9E9FF",
+              "tint": "#FFFFFFFF"
+            },
+            "slot": {
+              "position": [0, 7],
+              "size": [56, 50],
+              "anchors": [0, 0, 0, 0],
+              "alignment": [0, 0],
+              "zOrder": 0
+            }
+          },
+          {
+            "id": "BrandText",
+            "type": "Text",
+            "props": {
+              "text": "家园小助手",
+              "fontSize": 34,
+              "color": "#F8F8F6FF",
+              "horizontalAlign": "left",
+              "verticalAlign": "center",
+              "wrap": false
+            },
+            "slot": {
+              "position": [70, 0],
+              "size": [230, 0],
+              "anchors": [0, 0, 0, 1],
+              "alignment": [0, 0],
+              "zOrder": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "DeviceModule",
+        "type": "Canvas",
+        "slot": {
+          "position": [0, 8],
+          "size": [1360, 880],
+          "anchors": [0.5, 0.5, 0.5, 0.5],
+          "alignment": [0.5, 0.5],
+          "zOrder": 3
+        },
+        "children": [
+          {
+            "id": "DeviceShell",
+            "type": "Border",
+            "props": {
+              "backgroundColor": "#E9E9D6FF",
+              "borderColor": "#576059FF",
+              "borderWidth": 7,
+              "cornerRadius": 55,
+              "padding": 0
+            },
+            "slot": {
+              "position": [0, 0],
+              "size": [0, 60],
+              "anchors": [0, 0, 1, 1],
+              "alignment": [0, 0],
+              "zOrder": 0
+            }
+          },
+          {
+            "id": "ScreenBezel",
+            "type": "Border",
+            "props": {
+              "backgroundColor": "#151A17FF",
+              "borderColor": "#353C38FF",
+              "borderWidth": 8,
+              "cornerRadius": 28,
+              "padding": 0
+            },
+            "slot": {
+              "position": [58, 116],
+              "size": [62, 566],
+              "anchors": [0, 0, 1, 0],
+              "alignment": [0, 0],
+              "zOrder": 1
+            }
+          },
+          {
+            "id": "NavigationModule",
+            "type": "Canvas",
+            "slot": {
+              "position": [76, 136],
+              "size": [242, 520],
+              "anchors": [0, 0, 0, 0],
+              "alignment": [0, 0],
+              "zOrder": 2
+            },
+            "children": [
+              {
+                "id": "NavigationList",
+                "type": "ListView",
+                "isVariable": true,
+                "props": {
+                  "entryTemplate": "NavigationItem",
+                  "preview": "NavigationItems",
+                  "orientation": "vertical",
+                  "entrySize": [242, 112],
+                  "spacing": [0, 14]
+                },
+                "slot": {
+                  "position": [0, 0],
+                  "size": [0, 0],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 0
+                }
+              }
+            ]
+          },
+          {
+            "id": "FacilitiesContentModule",
+            "type": "Canvas",
+            "isVariable": true,
+            "slot": {
+              "position": [338, 136],
+              "size": [82, 520],
+              "anchors": [0, 0, 1, 0],
+              "alignment": [0, 0],
+              "zOrder": 2
+            },
+            "children": [
+              {
+                "id": "ContentBackground",
+                "type": "Border",
+                "props": {
+                  "backgroundColor": "#313A32FF",
+                  "borderColor": "#536D4FFF",
+                  "borderWidth": 3,
+                  "cornerRadius": 12,
+                  "padding": 0
+                },
+                "slot": {
+                  "position": [0, 66],
+                  "size": [0, 0],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 0
+                }
+              },
+              {
+                "id": "ContentTitle",
+                "type": "Text",
+                "props": {
+                  "text": "当前快乐老家恢复设施情况如下:",
+                  "fontSize": 25,
+                  "color": "#F2F2EDFF",
+                  "horizontalAlign": "left",
+                  "verticalAlign": "center",
+                  "wrap": false
+                },
+                "slot": {
+                  "position": [0, 0],
+                  "size": [0, 50],
+                  "anchors": [0, 0, 1, 0],
+                  "alignment": [0, 0],
+                  "zOrder": 2
+                }
+              },
+              {
+                "id": "TitleDivider",
+                "type": "Border",
+                "props": {
+                  "backgroundColor": "#68706880",
+                  "padding": 0
+                },
+                "slot": {
+                  "position": [0, 54],
+                  "size": [0, 1],
+                  "anchors": [0, 0, 1, 0],
+                  "alignment": [0, 0],
+                  "zOrder": 1
+                }
+              },
+              {
+                "id": "StatusBubbleList",
+                "type": "ListView",
+                "isVariable": true,
+                "props": {
+                  "entryTemplate": "StatusBubbleItem",
+                  "preview": "StatusBubbles",
+                  "orientation": "vertical",
+                  "spacing": [0, 10],
+                  "sizeToContent": true
+                },
+                "slot": {
+                  "position": [16, 78],
+                  "size": [16, 12],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 2
+                }
+              }
+            ]
+          },
+          {
+            "id": "PlacementLimitModule",
+            "type": "Canvas",
+            "slot": {
+              "position": [-62, -86],
+              "size": [210, 54],
+              "anchors": [1, 1, 1, 1],
+              "alignment": [1, 1],
+              "zOrder": 4
+            },
+            "children": [
+              {
+                "id": "PlacementLimitSurface",
+                "type": "Border",
+                "props": {
+                  "backgroundColor": "#F2F1DDFF",
+                  "borderColor": "#93A05FFF",
+                  "borderWidth": 3,
+                  "cornerRadius": 18,
+                  "padding": 0
+                },
+                "slot": {
+                  "position": [0, 0],
+                  "size": [0, 0],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 0
+                }
+              },
+              {
+                "id": "PlacementLimitText",
+                "type": "Text",
+                "props": {
+                  "text": "摆放限制",
+                  "fontSize": 22,
+                  "color": "#484A53FF",
+                  "horizontalAlign": "center",
+                  "verticalAlign": "center",
+                  "wrap": false
+                },
+                "slot": {
+                  "position": [12, 0],
+                  "size": [48, 0],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 1
+                }
+              },
+              {
+                "id": "PlacementLimitButton",
+                "type": "Button",
+                "isVariable": true,
+                "props": {
+                  "label": "▼",
+                  "backgroundColor": "#69745DFF",
+                  "textColor": "#EAD74DFF",
+                  "fontSize": 20
+                },
+                "slot": {
+                  "position": [-4, 2],
+                  "size": [50, 50],
+                  "anchors": [1, 0, 1, 0],
+                  "alignment": [1, 0],
+                  "zOrder": 2
+                }
+              }
+            ]
+          },
+          {
+            "id": "FacilitySummaryModule",
+            "type": "Canvas",
+            "slot": {
+              "position": [94, -10],
+              "size": [1120, 78],
+              "anchors": [0.5, 1, 0.5, 1],
+              "alignment": [0.5, 1],
+              "zOrder": 5
+            },
+            "children": [
+              {
+                "id": "SummarySurface",
+                "type": "Border",
+                "props": {
+                  "backgroundColor": "#E2E4D9F5",
+                  "borderColor": "#89977CFF",
+                  "borderWidth": 2,
+                  "cornerRadius": 5,
+                  "padding": 0
+                },
+                "slot": {
+                  "position": [0, 0],
+                  "size": [0, 0],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 0
+                }
+              },
+              {
+                "id": "FacilitySummaryList",
+                "type": "ListView",
+                "isVariable": true,
+                "props": {
+                  "entryTemplate": "FacilitySummaryItem",
+                  "preview": "FacilitySummaryItems",
+                  "orientation": "horizontal",
+                  "entrySize": [264, 74],
+                  "spacing": [10, 0]
+                },
+                "slot": {
+                  "position": [12, 2],
+                  "size": [12, 2],
+                  "anchors": [0, 0, 1, 1],
+                  "alignment": [0, 0],
+                  "zOrder": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

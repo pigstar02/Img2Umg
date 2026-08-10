@@ -1,0 +1,111 @@
+{
+  "format": "img2umg-entry",
+  "version": 1,
+  "id": "StatusBubbleItem",
+  "size": [908, 84],
+  "root": {
+    "id": "StatusBubbleItemRoot",
+    "type": "HorizontalBox",
+    "children": [
+      {
+        "id": "StatusIdentityBox",
+        "type": "SizeBox",
+        "props": {
+          "widthOverride": 76,
+          "minHeight": 84
+        },
+        "slot": {
+          "padding": [0, 0, 0, 0],
+          "horizontalAlign": "left",
+          "verticalAlign": "top",
+          "sizeRule": "auto"
+        },
+        "children": [
+          {
+            "id": "StatusIdentityCanvas",
+            "type": "Canvas",
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill"
+            },
+            "children": [
+              {
+                "id": "StatusIcon",
+                "type": "Image",
+                "isVariable": true,
+                "props": {
+                  "source": null,
+                  "placeholderColor": "#45D8EFFF",
+                  "tint": "#FFFFFFFF"
+                },
+                "slot": {
+                  "position": [0, 4],
+                  "size": [68, 68],
+                  "anchors": [0.5, 0, 0.5, 0],
+                  "alignment": [0.5, 0],
+                  "zOrder": 0
+                }
+              },
+              {
+                "id": "StatusLabel",
+                "type": "Text",
+                "isVariable": true,
+                "props": {
+                  "text": "精力",
+                  "fontSize": 21,
+                  "color": "#E8E8E3FF",
+                  "horizontalAlign": "center",
+                  "verticalAlign": "bottom",
+                  "wrap": false
+                },
+                "slot": {
+                  "position": [0, -2],
+                  "size": [76, 30],
+                  "anchors": [0.5, 1, 0.5, 1],
+                  "alignment": [0.5, 1],
+                  "zOrder": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "BubbleSurface",
+        "type": "Border",
+        "props": {
+          "backgroundColor": "#3B433BFF",
+          "cornerRadius": 8,
+          "padding": [16, 4]
+        },
+        "slot": {
+          "padding": [16, 0, 0, 0],
+          "horizontalAlign": "fill",
+          "verticalAlign": "fill",
+          "sizeRule": "fill",
+          "fill": 1
+        },
+        "children": [
+          {
+            "id": "DetailList",
+            "type": "ListView",
+            "isVariable": true,
+            "props": {
+              "entryTemplate": "StatusDetailItem",
+              "preview": "EnergyStatusDetails",
+              "orientation": "vertical",
+              "spacing": [0, 0],
+              "sizeToContent": true
+            },
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -27,7 +27,8 @@ const card = (id: string, x: number, y: number, text = id): VisualNode => ({
   }],
 });
 
-const root = (children: VisualNode[]): VisualNode => ({ id: "Root", type: "Canvas", bounds: { x: 0, y: 0, width: 800, height: 600 }, children });
+const DESIGN_CANVAS = { width: 1920, height: 1080 } as const;
+const root = (children: VisualNode[]): VisualNode => ({ id: "Root", type: "Canvas", bounds: { x: 0, y: 0, ...DESIGN_CANVAS }, children });
 
 function firstCollection(pkg: ReturnType<typeof extractUiPackage>): UiNode | undefined {
   return pkg.screens["screens/Test.screen.json"].root.children?.find((node) => node.type === "ListView" || node.type === "TileView");
@@ -35,11 +36,12 @@ function firstCollection(pkg: ReturnType<typeof extractUiPackage>): UiNode | und
 
 describe("list extraction", () => {
   it("extracts a vertical run into a ListView and captures visual overrides", () => {
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([
       card("A", 20, 20, "Alpha"), card("B", 20, 110, "Beta"), card("C", 20, 200, "Gamma"),
     ]));
     const list = firstCollection(pkg);
     expect(list?.type).toBe("ListView");
+    expect(list?.isVariable).toBeUndefined();
     expect(list?.props).toMatchObject({ orientation: "vertical", spacing: [0, 10] });
     expect(pkg.manifest.entries).toHaveLength(1);
     expect(Object.values(pkg.previews)[0].items).toHaveLength(3);
@@ -52,7 +54,7 @@ describe("list extraction", () => {
       id: "Panel", type: "Overlay", bounds: { x: 50, y: 50, width: 500, height: 400 },
       children: [card("A", 70, 70), card("B", 70, 160), card("C", 70, 250)],
     };
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([panel]));
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([panel]));
     expect(pkg.screens["screens/Test.screen.json"].root.children?.[0].children?.[0].type).toBe("ListView");
     expect(pkg.manifest.entries).toHaveLength(1);
   });
@@ -60,7 +62,7 @@ describe("list extraction", () => {
 
 describe("tile extraction", () => {
   it("extracts a regular grid whose final row is incomplete", () => {
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([
       card("A", 20, 20), card("B", 130, 20), card("C", 240, 20),
       card("D", 20, 110), card("E", 130, 110),
     ]));
@@ -73,20 +75,20 @@ describe("tile extraction", () => {
 
 describe("conservative decisions", () => {
   it("does not extract two matching nodes", () => {
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([card("A", 20, 20), card("B", 20, 110)]));
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([card("A", 20, 20), card("B", 20, 110)]));
     expect(pkg.manifest.entries).toHaveLength(0);
   });
 
   it("does not join non-contiguous matching structures", () => {
     const separator: VisualNode = { id: "Divider", type: "Image", bounds: { x: 20, y: 110, width: 100, height: 5 }, props: { placeholderColor: "#FFFFFFFF" } };
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([
       card("A", 20, 20), card("B", 20, 120), separator, card("C", 20, 220), card("D", 20, 320),
     ]));
     expect(pkg.manifest.entries).toHaveLength(0);
   });
 
   it("rejects irregular spacing instead of guessing", () => {
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([
       card("A", 20, 20), card("B", 20, 110), card("C", 20, 260),
     ]));
     expect(pkg.manifest.entries).toHaveLength(0);
@@ -97,39 +99,71 @@ describe("conservative decisions", () => {
   });
 });
 
-describe("canvas anchor inference", () => {
-  it("stretches an element that reaches all four parent edges", () => {
-    const backdrop: VisualNode = { id: "Backdrop", type: "Image", bounds: { x: 0, y: 0, width: 800, height: 600 } };
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([backdrop]));
+describe("legacy canvas extraction", () => {
+  it("keeps full-screen geometry as conservative top-left fixed layout", () => {
+    const backdrop: VisualNode = { id: "Backdrop", type: "Image", bounds: { x: 0, y: 0, ...DESIGN_CANVAS } };
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([backdrop]));
     expect(pkg.screens["screens/Test.screen.json"].root.children?.[0].slot).toEqual({
-      position: [0, 0], size: [0, 0], anchors: [0, 0, 1, 1],
+      position: [0, 0], size: [1920, 1080], anchors: [0, 0, 0, 0], alignment: [0, 0],
     });
     expect(validatePackage(pkg)).toEqual({ valid: true, errors: [] });
   });
 
-  it("anchors centered and right-edge elements to their nearest stable reference", () => {
-    const centered: VisualNode = { id: "Centered", type: "Border", bounds: { x: 300, y: 250, width: 200, height: 100 } };
-    const topRight: VisualNode = { id: "TopRight", type: "Button", bounds: { x: 700, y: 30, width: 60, height: 40 }, props: { label: "Close" } };
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([centered, topRight]));
+  it("does not infer center or edge anchors from geometry", () => {
+    const centered: VisualNode = { id: "Centered", type: "Border", bounds: { x: 860, y: 490, width: 200, height: 100 } };
+    const topRight: VisualNode = { id: "TopRight", type: "Button", bounds: { x: 1820, y: 30, width: 60, height: 40 }, props: { label: "Close" } };
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([centered, topRight]));
     const children = pkg.screens["screens/Test.screen.json"].root.children ?? [];
     expect(children.find((node) => node.id === "Centered")?.slot).toEqual({
-      position: [-100, -50], size: [200, 100], anchors: [0.5, 0.5, 0.5, 0.5],
+      position: [860, 490], size: [200, 100], anchors: [0, 0, 0, 0], alignment: [0, 0],
     });
     expect(children.find((node) => node.id === "TopRight")?.slot).toEqual({
-      position: [-100, 30], size: [60, 40], anchors: [1, 0, 1, 0],
+      position: [1820, 30], size: [60, 40], anchors: [0, 0, 0, 0], alignment: [0, 0],
     });
   });
 
-  it("can stretch on one axis while anchoring the other axis", () => {
-    const footer: VisualNode = { id: "Footer", type: "Border", bounds: { x: 4, y: 540, width: 792, height: 40 } };
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([footer]), { alignmentTolerance: 6 });
+  it("does not infer stretch or bottom anchoring from edge proximity", () => {
+    const footer: VisualNode = { id: "Footer", type: "Border", bounds: { x: 4, y: 1020, width: 1912, height: 40 } };
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([footer]), { alignmentTolerance: 6 });
     expect(pkg.screens["screens/Test.screen.json"].root.children?.[0].slot).toEqual({
-      position: [4, -60], size: [4, 40], anchors: [0, 1, 1, 1],
+      position: [4, 1020], size: [1912, 40], anchors: [0, 0, 0, 0], alignment: [0, 0],
+    });
+  });
+
+  it("keeps ambiguous geometry top-left fixed", () => {
+    const ambiguous: VisualNode = { id: "Ambiguous", type: "Border", bounds: { x: 700, y: 220, width: 200, height: 100 } };
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([ambiguous]));
+    expect(pkg.screens["screens/Test.screen.json"].root.children?.[0].slot).toEqual({
+      position: [700, 220], size: [200, 100], anchors: [0, 0, 0, 0], alignment: [0, 0],
     });
   });
 });
 
 describe("validation and file output", () => {
+  it("accepts WidgetSwitcher states and validates the active child", () => {
+    const screen = {
+      format: "img2umg-screen", version: 1, id: "States", canvas: DESIGN_CANVAS,
+      root: {
+        id: "Root", type: "Canvas", children: [{
+          id: "DialogStates", type: "WidgetSwitcher", props: { activeWidgetIndex: 1 },
+          slot: { position: [100, 100], size: [400, 300] },
+          children: [
+            { id: "NormalState", type: "Overlay", slot: { padding: [0, 0, 0, 0], horizontalAlign: "fill", verticalAlign: "fill" } },
+            { id: "ConfirmState", type: "Overlay", slot: { padding: [0, 0, 0, 0], horizontalAlign: "fill", verticalAlign: "fill" } },
+          ],
+        }],
+      },
+    };
+    expect(validateScreen(screen)).toEqual({ valid: true, errors: [] });
+    screen.root.children[0].props.activeWidgetIndex = 2;
+    expect(validateScreen(screen).errors).toContain("$.root.children[0].props.activeWidgetIndex: expected index below child count 2");
+    screen.root.children[0].props.activeWidgetIndex = -1;
+    expect(validateScreen(screen).errors).toContain("$.root.children[0].props.activeWidgetIndex: expected non-negative integer");
+    screen.root.children[0].props.activeWidgetIndex = 0;
+    screen.root.children[0].children = [];
+    expect(validateScreen(screen).errors).toContain("$.root.children[0].children: WidgetSwitcher requires at least one child");
+  });
+
   it("validates the complete checked-in example package", () => {
     const pkg = {
       manifest: exampleManifest,
@@ -187,13 +221,27 @@ describe("validation and file output", () => {
 
   it("reports unknown fields and properties", () => {
     const invalid = {
-      format: "img2umg-screen", version: 1, id: "Bad", canvas: { width: 100, height: 100 }, surprise: true,
+      format: "img2umg-screen", version: 1, id: "Bad", canvas: DESIGN_CANVAS, surprise: true,
       root: { id: "Root", type: "Canvas", props: { madeUp: true } },
     };
     const result = validateScreen(invalid);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("$.surprise: unknown field");
     expect(result.errors).toContain("$.root.props.madeUp: unsupported for Canvas");
+  });
+
+  it("requires the fixed 1920x1080 screen canvas and validates isVariable", () => {
+    const screen = structuredClone(exampleScreen) as unknown as Record<string, any>;
+    screen.canvas = { width: 1280, height: 720 };
+    expect(validateScreen(screen).errors).toContain("$.canvas: expected fixed 1920x1080 design canvas");
+    screen.canvas = DESIGN_CANVAS;
+    screen.root.children[0].isVariable = "yes";
+    expect(validateScreen(screen).errors).toContain("$.root.children[0].isVariable: expected boolean");
+    screen.root.children[0].isVariable = true;
+    expect(validateScreen(screen)).toEqual({ valid: true, errors: [] });
+    screen.root.type = "Overlay";
+    expect(validateScreen(screen).errors).toContain("$.root.type: screen root must be Canvas");
+    expect(() => extractUiPackage("Test", { width: 1280, height: 720 }, root([]))).toThrow("requires a 1920x1080 design canvas");
   });
 
   it("validates preview override targets and values against their entry template", () => {
@@ -217,7 +265,7 @@ describe("validation and file output", () => {
   });
 
   it("writes every manifest reference to disk", async () => {
-    const pkg = extractUiPackage("Test", { width: 800, height: 600 }, root([
+    const pkg = extractUiPackage("Test", DESIGN_CANVAS, root([
       card("A", 20, 20), card("B", 20, 110), card("C", 20, 200),
     ]));
     const directory = await mkdtemp(join(tmpdir(), "img2umg-test-"));

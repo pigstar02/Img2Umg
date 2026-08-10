@@ -1,0 +1,14 @@
+{
+  "format": "img2umg-preview",
+  "version": 1,
+  "entryTemplate": "StatusDetailItem",
+  "items": [
+    {
+      "size": [784, 48],
+      "overrides": [
+        { "target": "DetailState", "props": { "activeWidgetIndex": 0 } },
+        { "target": "StatusText", "props": { "text": "普通货光仔有1只，躺椅够3只使用，还顺利", "color": "#DFE0DBFF" } }
+      ]
+    }
+  ]
+}

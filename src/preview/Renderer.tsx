@@ -31,8 +31,10 @@ export function PackageRenderer({ pkg, screen, viewport }: PackageRendererProps)
 
 function NodeRenderer({ node, pkg, root = false, parentType }: { node: UiNode; pkg: UiPackage; root?: boolean; parentType?: UiNode["type"] }) {
   const style: CSSProperties = root ? { position: "relative", width: "100%", height: "100%" } : slotStyle(node, parentType);
-  const children = node.children?.map((child) => <NodeRenderer key={child.id} node={child} pkg={pkg} parentType={node.type} />);
   const props = node.props ?? {};
+  if (props.visibility === "collapsed") return <div data-node={node.id} style={{ ...style, display: "none" }} />;
+  if (props.visibility === "hidden") style.visibility = "hidden";
+  const children = node.children?.map((child) => <NodeRenderer key={child.id} node={child} pkg={pkg} parentType={node.type} />);
 
   switch (node.type) {
     case "Canvas":
@@ -42,6 +44,13 @@ function NodeRenderer({ node, pkg, root = false, parentType }: { node: UiNode; p
       return <div data-node={node.id} style={{ ...style, display: "flex" }}>{children}</div>;
     case "VerticalBox":
       return <div data-node={node.id} style={{ ...style, display: "flex", flexDirection: "column" }}>{children}</div>;
+    case "WidgetSwitcher": {
+      const activeWidgetIndex = number(props.activeWidgetIndex) ?? 0;
+      const activeChild = node.children?.[activeWidgetIndex];
+      return <div data-node={node.id} data-active-widget-index={activeWidgetIndex} style={{ ...style, overflow: "hidden" }}>
+        {activeChild ? <NodeRenderer node={activeChild} pkg={pkg} parentType={node.type} /> : null}
+      </div>;
+    }
     case "SizeBox":
       return <div data-node={node.id} style={{ ...style, width: number(props.widthOverride) ?? style.width, height: number(props.heightOverride) ?? style.height, minWidth: number(props.minWidth), minHeight: number(props.minHeight) }}>{children}</div>;
     case "ScaleBox":
@@ -82,12 +91,14 @@ function Collection({ node, pkg, style }: { node: UiNode; pkg: UiPackage; style:
   const collectionStyle: CSSProperties = node.type === "TileView"
     ? { display: "grid", gridTemplateColumns: `repeat(${Number(node.props?.columns) || 1}, ${entry.size[0]}px)`, gridAutoRows: `${entry.size[1]}px`, columnGap: spacing?.[0] ?? 0, rowGap: spacing?.[1] ?? 0 }
     : { display: "flex", flexDirection: node.props?.orientation === "horizontal" ? "row" : "column", gap: node.props?.orientation === "horizontal" ? spacing?.[0] : spacing?.[1] };
-  return <div data-node={node.id} style={{ ...style, ...collectionStyle, overflow: "hidden" }}>{preview.items.map((item, index) => <EntryRenderer key={index} entry={entry} item={item} pkg={pkg} />)}</div>;
+  const sizeToContent = node.type === "ListView" && node.props?.sizeToContent === true;
+  return <div data-node={node.id} style={{ ...style, ...collectionStyle, overflow: "hidden" }}>{preview.items.map((item, index) => <EntryRenderer key={index} entry={entry} item={item} pkg={pkg} sizeToContent={sizeToContent} />)}</div>;
 }
 
-function EntryRenderer({ entry, item, pkg }: { entry: EntryFile; item: PreviewItem; pkg: UiPackage }) {
+function EntryRenderer({ entry, item, pkg, sizeToContent }: { entry: EntryFile; item: PreviewItem; pkg: UiPackage; sizeToContent: boolean }) {
   const root = useMemo(() => applyOverrides(entry.root, item), [entry.root, item]);
-  return <div style={{ position: "relative", width: entry.size[0], height: entry.size[1], flex: "0 0 auto", overflow: "hidden" }}><NodeRenderer node={root} pkg={pkg} root /></div>;
+  const size = sizeToContent && item.size ? item.size : entry.size;
+  return <div style={{ position: "relative", width: size[0], height: size[1], flex: "0 0 auto", overflow: "hidden" }}><NodeRenderer node={root} pkg={pkg} root /></div>;
 }
 
 function applyOverrides(root: UiNode, item: PreviewItem): UiNode {
@@ -114,14 +125,15 @@ function slotStyle(node: UiNode, parentType?: UiNode["type"]): CSSProperties {
     const anchors = slot.anchors ?? [0, 0, 0, 0];
     const horizontalStretch = anchors[0] !== anchors[2];
     const verticalStretch = anchors[1] !== anchors[3];
+    const autoSize = slot.autoSize === true;
     return {
       position: "absolute",
       left: `calc(${anchors[0] * 100}% + ${slot.position[0]}px)`,
       top: `calc(${anchors[1] * 100}% + ${slot.position[1]}px)`,
       right: horizontalStretch ? `calc(${(1 - anchors[2]) * 100}% + ${slot.size[0]}px)` : undefined,
       bottom: verticalStretch ? `calc(${(1 - anchors[3]) * 100}% + ${slot.size[1]}px)` : undefined,
-      width: horizontalStretch ? undefined : slot.size[0],
-      height: verticalStretch ? undefined : slot.size[1],
+      width: horizontalStretch ? undefined : autoSize ? "fit-content" : slot.size[0],
+      height: verticalStretch ? undefined : autoSize ? "fit-content" : slot.size[1],
       transform: slot.alignment ? `translate(${horizontalStretch ? 0 : -slot.alignment[0] * 100}%, ${verticalStretch ? 0 : -slot.alignment[1] * 100}%)` : undefined,
       zIndex: slot.zOrder,
       boxSizing: "border-box",

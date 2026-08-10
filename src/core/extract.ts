@@ -1,4 +1,4 @@
-import { FORMAT_VERSION, type EntryFile, type ExtractionOptions, type NodeType, type PreviewFile, type PreviewOverride, type UiNode, type UiPackage, type UiSlot, type VisualNode } from "./types";
+import { DESIGN_CANVAS, FORMAT_VERSION, type EntryFile, type ExtractionOptions, type NodeType, type PreviewFile, type PreviewOverride, type UiNode, type UiPackage, type UiSlot, type VisualNode } from "./types";
 
 const defaults: Required<ExtractionOptions> = {
   sizeTolerance: 0.08,
@@ -16,6 +16,9 @@ export function structureFingerprint(node: VisualNode): string {
 }
 
 export function extractUiPackage(screenId: string, canvas: { width: number; height: number }, visualRoot: VisualNode, options: ExtractionOptions = {}): UiPackage {
+  if (canvas.width !== DESIGN_CANVAS.width || canvas.height !== DESIGN_CANVAS.height) {
+    throw new Error(`Img2UMG screen extraction requires a ${DESIGN_CANVAS.width}x${DESIGN_CANVAS.height} design canvas.`);
+  }
   const config = { ...defaults, ...options };
   const entries: Record<string, EntryFile> = {};
   const previews: Record<string, PreviewFile> = {};
@@ -25,8 +28,9 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
     const node: UiNode = {
       id: visual.id,
       type: visual.type,
+      ...(visual.isVariable !== undefined ? { isVariable: visual.isVariable } : {}),
       ...(visual.props ? { props: structuredClone(visual.props) } : {}),
-      ...(!root && parentType && parentBounds ? { slot: slotFor(visual.bounds, parentBounds, parentType, config.alignmentTolerance) } : {}),
+      ...(!root && parentType && parentBounds ? { slot: slotFor(visual.bounds, parentBounds, parentType) } : {}),
     };
     if (!visual.children?.length) return node;
 
@@ -51,7 +55,7 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
         version: FORMAT_VERSION,
         id: baseName,
         size: [template.bounds.width, template.bounds.height],
-        root: convertEntry(normalized, true, undefined, undefined, config.alignmentTolerance),
+        root: convertEntry(normalized),
       };
       previews[previewFile] = {
         format: "img2umg-preview",
@@ -70,7 +74,7 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
           spacing: pattern.spacing,
           ...(pattern.type === "ListView" ? { orientation: pattern.columns === 1 ? "vertical" : "horizontal" } : { columns: pattern.columns }),
         },
-        slot: slotFor(area, visual.bounds, visual.type, config.alignmentTolerance),
+        slot: slotFor(area, visual.bounds, visual.type),
       });
       index += run.length;
     }
@@ -177,13 +181,14 @@ function normalizeTree(node: VisualNode, origin = node.bounds): VisualNode {
   };
 }
 
-function convertEntry(node: VisualNode, root = true, parentType?: NodeType, parentBounds?: Bounds, edgeTolerance = defaults.alignmentTolerance): UiNode {
+function convertEntry(node: VisualNode, root = true, parentType?: NodeType, parentBounds?: Bounds): UiNode {
   return {
     id: node.id,
     type: node.type,
+    ...(node.isVariable !== undefined ? { isVariable: node.isVariable } : {}),
     ...(node.props ? { props: structuredClone(node.props) } : {}),
-    ...(!root && parentType && parentBounds ? { slot: slotFor(node.bounds, parentBounds, parentType, edgeTolerance) } : {}),
-    ...(node.children?.length ? { children: node.children.map((child) => convertEntry(child, false, node.type, node.bounds, edgeTolerance)) } : {}),
+    ...(!root && parentType && parentBounds ? { slot: slotFor(node.bounds, parentBounds, parentType) } : {}),
+    ...(node.children?.length ? { children: node.children.map((child) => convertEntry(child, false, node.type, node.bounds)) } : {}),
   };
 }
 
@@ -204,16 +209,15 @@ function collectOverrides(template: VisualNode, item: VisualNode): PreviewOverri
   return overrides;
 }
 
-function slotFor(bounds: Bounds, parent: Bounds, parentType: NodeType, edgeTolerance = defaults.alignmentTolerance): UiSlot {
+function slotFor(bounds: Bounds, parent: Bounds, parentType: NodeType): UiSlot {
   const left = bounds.x - parent.x;
   const top = bounds.y - parent.y;
   if (parentType === "Canvas") {
-    const horizontal = inferAxisAnchor(left, bounds.width, parent.width, edgeTolerance);
-    const vertical = inferAxisAnchor(top, bounds.height, parent.height, edgeTolerance);
     return {
-      position: [horizontal.position, vertical.position],
-      size: [horizontal.size, vertical.size],
-      anchors: [horizontal.min, vertical.min, horizontal.max, vertical.max],
+      position: [left, top],
+      size: [bounds.width, bounds.height],
+      anchors: [0, 0, 0, 0],
+      alignment: [0, 0],
     };
   }
   if (parentType === "HorizontalBox" || parentType === "VerticalBox") return { sizeRule: "auto", padding: [0, 0, 0, 0], horizontalAlign: "fill", verticalAlign: "fill" };
@@ -222,17 +226,6 @@ function slotFor(bounds: Bounds, parent: Bounds, parentType: NodeType, edgeToler
     horizontalAlign: "fill",
     verticalAlign: "fill",
   };
-}
-
-function inferAxisAnchor(start: number, length: number, parentLength: number, edgeTolerance: number) {
-  const end = parentLength - start - length;
-  if (Math.abs(start) <= edgeTolerance && Math.abs(end) <= edgeTolerance) {
-    return { min: 0, max: 1, position: start, size: end };
-  }
-
-  const centerRatio = (start + length / 2) / parentLength;
-  const anchor = centerRatio < 1 / 3 ? 0 : centerRatio > 2 / 3 ? 1 : 0.5;
-  return { min: anchor, max: anchor, position: start - parentLength * anchor, size: length };
 }
 
 function unionBounds(bounds: Bounds[]): Bounds {

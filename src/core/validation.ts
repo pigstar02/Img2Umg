@@ -1,4 +1,4 @@
-import type { EntryFile, ManifestFile, PreviewFile, ScreenFile, UiNode, UiPackage } from "./types";
+import { DESIGN_CANVAS, type EntryFile, type ManifestFile, type PreviewFile, type ScreenFile, type UiNode, type UiPackage } from "./types";
 
 export interface ValidationResult {
   valid: boolean;
@@ -10,6 +10,7 @@ const nodeProps: Record<UiNode["type"], Set<string>> = {
   Overlay: new Set([]),
   HorizontalBox: new Set([]),
   VerticalBox: new Set([]),
+  WidgetSwitcher: new Set(["activeWidgetIndex"]),
   SizeBox: new Set(["widthOverride", "heightOverride", "minWidth", "minHeight"]),
   ScaleBox: new Set(["stretch"]),
   Spacer: new Set(["size"]),
@@ -18,11 +19,13 @@ const nodeProps: Record<UiNode["type"], Set<string>> = {
   Text: new Set(["text", "fontSize", "color", "horizontalAlign", "verticalAlign", "wrap"]),
   Button: new Set(["label", "backgroundColor", "textColor", "fontSize"]),
   ProgressBar: new Set(["percent", "fillColor", "backgroundColor"]),
-  ListView: new Set(["entryTemplate", "preview", "orientation", "entrySize", "spacing"]),
+  ListView: new Set(["entryTemplate", "preview", "orientation", "entrySize", "spacing", "sizeToContent"]),
   TileView: new Set(["entryTemplate", "preview", "orientation", "entrySize", "spacing", "columns"]),
 };
 
-const containers = new Set<UiNode["type"]>(["Canvas", "Overlay", "HorizontalBox", "VerticalBox", "SizeBox", "ScaleBox", "Border", "Button"]);
+for (const props of Object.values(nodeProps)) props.add("visibility");
+
+const containers = new Set<UiNode["type"]>(["Canvas", "Overlay", "HorizontalBox", "VerticalBox", "WidgetSwitcher", "SizeBox", "ScaleBox", "Border", "Button"]);
 const leaves = new Set<UiNode["type"]>(["Spacer", "Image", "Text", "ProgressBar", "ListView", "TileView"]);
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -78,8 +81,9 @@ function pair(value: unknown, path: string, errors: string[], positive = false) 
 
 function validateNode(value: unknown, path: string, errors: string[], ids: Set<string>, root = false, parentType?: UiNode["type"]) {
   if (!isObject(value)) return errors.push(`${path}: expected object`);
-  exactKeys(value, ["id", "type", "props", "slot", "children"], path, errors);
+  exactKeys(value, ["id", "type", "isVariable", "props", "slot", "children"], path, errors);
   nonEmptyString(value.id, `${path}.id`, errors);
+  optionalBoolean(value.isVariable, `${path}.isVariable`, errors);
   if (typeof value.id === "string") {
     if (ids.has(value.id)) errors.push(`${path}.id: duplicate id ${value.id}`);
     ids.add(value.id);
@@ -109,10 +113,17 @@ function validateNode(value: unknown, path: string, errors: string[], ids: Set<s
     if ((type === "SizeBox" || type === "ScaleBox" || type === "Border" || type === "Button") && children.length > 1) errors.push(`${path}.children: ${type} accepts at most one child`);
   }
   const props = isObject(value.props) ? value.props : {};
+  optionalEnum(props.visibility, ["visible", "hidden", "collapsed"], `${path}.props.visibility`, errors);
   if (type === "SizeBox") {
     for (const key of ["widthOverride", "heightOverride", "minWidth", "minHeight"]) if (props[key] !== undefined) positiveNumber(props[key], `${path}.props.${key}`, errors);
   }
   if (type === "ScaleBox") optionalEnum(props.stretch, ["none", "fill", "scaleToFit", "scaleToFill", "scaleToFitX", "scaleToFitY"], `${path}.props.stretch`, errors);
+  if (type === "WidgetSwitcher") {
+    const activeWidgetIndex = props.activeWidgetIndex ?? 0;
+    if (!Number.isInteger(activeWidgetIndex) || Number(activeWidgetIndex) < 0) errors.push(`${path}.props.activeWidgetIndex: expected non-negative integer`);
+    if (!Array.isArray(children) || children.length === 0) errors.push(`${path}.children: WidgetSwitcher requires at least one child`);
+    else if (Number.isInteger(activeWidgetIndex) && Number(activeWidgetIndex) >= children.length) errors.push(`${path}.props.activeWidgetIndex: expected index below child count ${children.length}`);
+  }
   if (type === "Border") {
     optionalColor(props.backgroundColor, `${path}.props.backgroundColor`, errors);
     optionalColor(props.borderColor, `${path}.props.borderColor`, errors);
@@ -154,10 +165,14 @@ function validateNode(value: unknown, path: string, errors: string[], ids: Set<s
   if (type === "ListView" || type === "TileView") {
     nonEmptyString(props.entryTemplate, `${path}.props.entryTemplate`, errors);
     nonEmptyString(props.preview, `${path}.props.preview`, errors);
-    pair(props.entrySize, `${path}.props.entrySize`, errors, true);
+    const sizeToContent = props.sizeToContent === true;
+    if (type === "TileView" || !sizeToContent) pair(props.entrySize, `${path}.props.entrySize`, errors, true);
+    else if (props.entrySize !== undefined) pair(props.entrySize, `${path}.props.entrySize`, errors, true);
     pair(props.spacing, `${path}.props.spacing`, errors);
     if (Array.isArray(props.spacing) && props.spacing.some((value) => typeof value === "number" && value < 0)) errors.push(`${path}.props.spacing: values cannot be negative`);
     optionalEnum(props.orientation, ["vertical", "horizontal"], `${path}.props.orientation`, errors);
+    if (type === "ListView") optionalBoolean(props.sizeToContent, `${path}.props.sizeToContent`, errors);
+    if (type === "TileView" && props.sizeToContent !== undefined) errors.push(`${path}.props.sizeToContent: unsupported for TileView`);
     if (type === "TileView" && (!Number.isInteger(props.columns) || Number(props.columns) < 1)) errors.push(`${path}.props.columns: expected positive integer`);
     if (type === "ListView" && props.columns !== undefined) errors.push(`${path}.props.columns: unsupported for ListView`);
   }
@@ -165,9 +180,10 @@ function validateNode(value: unknown, path: string, errors: string[], ids: Set<s
 
 function validateSlot(slot: Record<string, unknown>, parentType: UiNode["type"] | undefined, path: string, errors: string[]) {
   if (parentType === "Canvas") {
-    exactKeys(slot, ["position", "size", "anchors", "alignment", "zOrder"], path, errors);
+    exactKeys(slot, ["position", "size", "autoSize", "anchors", "alignment", "zOrder"], path, errors);
     pair(slot.position, `${path}.position`, errors);
     pair(slot.size, `${path}.size`, errors);
+    optionalBoolean(slot.autoSize, `${path}.autoSize`, errors);
     const anchors = slot.anchors;
     if (anchors !== undefined && (!Array.isArray(anchors) || anchors.length !== 4 || anchors.some((value) => typeof value !== "number" || !Number.isFinite(value)))) {
       errors.push(`${path}.anchors: expected four finite numbers`);
@@ -223,8 +239,12 @@ export function validateScreen(value: unknown): ValidationResult {
       exactKeys(value.canvas, ["width", "height"], "$.canvas", errors);
       positiveNumber(value.canvas.width, "$.canvas.width", errors);
       positiveNumber(value.canvas.height, "$.canvas.height", errors);
+      if (value.canvas.width !== DESIGN_CANVAS.width || value.canvas.height !== DESIGN_CANVAS.height) {
+        errors.push(`$.canvas: expected fixed ${DESIGN_CANVAS.width}x${DESIGN_CANVAS.height} design canvas`);
+      }
     }
     validateNode(value.root, "$.root", errors, new Set(), true);
+    if (isObject(value.root) && value.root.type !== "Canvas") errors.push("$.root.type: screen root must be Canvas");
   }
   return { valid: errors.length === 0, errors };
 }
@@ -247,7 +267,8 @@ export function validatePreview(value: unknown): ValidationResult {
     else value.items.forEach((item, itemIndex) => {
       const path = `$.items[${itemIndex}]`;
       if (!isObject(item)) return errors.push(`${path}: expected object`);
-      exactKeys(item, ["overrides"], path, errors);
+      exactKeys(item, ["size", "overrides"], path, errors);
+      if (item.size !== undefined) pair(item.size, `${path}.size`, errors, true);
       if (!Array.isArray(item.overrides)) errors.push(`${path}.overrides: expected array`);
       else item.overrides.forEach((override, index) => {
         const overridePath = `${path}.overrides[${index}]`;

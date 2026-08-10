@@ -1,0 +1,38 @@
+{
+  "format": "img2umg-preview",
+  "version": 1,
+  "entryTemplate": "NavigationItem",
+  "items": [
+    {
+      "overrides": [
+        { "target": "SectionName", "props": { "text": "生产", "color": "#FFD43CFF" } },
+        { "target": "SectionIcon", "props": { "placeholderColor": "#D5A82FFF" } },
+        { "target": "StatusText", "props": { "text": "待处理" } },
+        { "target": "StatusPill", "props": { "backgroundColor": "#775E0FFF", "borderColor": "#B68B11FF" } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "SectionName", "props": { "text": "仓库", "color": "#62EF70FF" } },
+        { "target": "SectionIcon", "props": { "placeholderColor": "#55D96AFF" } },
+        { "target": "StatusText", "props": { "text": "正常", "color": "#E9F7DFFF" } },
+        { "target": "StatusPill", "props": { "backgroundColor": "#55753FFF", "borderColor": "#79A755FF" } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "SectionName", "props": { "text": "设施", "color": "#FFE43FFF" } },
+        { "target": "SectionIcon", "props": { "placeholderColor": "#D9B738FF" } },
+        { "target": "StatusText", "props": { "text": "待处理" } },
+        { "target": "SelectionFrame", "props": { "borderColor": "#E8F342FF" } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "SectionName", "props": { "text": "订单", "color": "#FFD43CFF" } },
+        { "target": "SectionIcon", "props": { "placeholderColor": "#D5A82FFF" } },
+        { "target": "StatusText", "props": { "text": "待处理" } }
+      ]
+    }
+  ]
+}

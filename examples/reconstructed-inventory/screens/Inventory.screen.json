@@ -2,7 +2,7 @@
   "format": "img2umg-screen",
   "version": 1,
   "id": "Inventory",
-  "canvas": { "width": 1440, "height": 900 },
+  "canvas": { "width": 1920, "height": 1080 },
   "root": {
     "id": "InventoryRoot",
     "type": "Canvas",
@@ -67,6 +67,7 @@
           {
             "id": "QuestList",
             "type": "ListView",
+            "isVariable": true,
             "props": {
               "entryTemplate": "Quest_ListItem",
               "preview": "Quest_ListItemPreview",
@@ -117,6 +118,7 @@
           {
             "id": "EquipmentTiles",
             "type": "TileView",
+            "isVariable": true,
             "props": {
               "entryTemplate": "Inventory_TileItem",
               "preview": "Inventory_TileItemPreview",
@@ -149,6 +151,7 @@
           {
             "id": "CapacityBar",
             "type": "ProgressBar",
+            "isVariable": true,
             "props": {
               "percent": 0.67,
               "fillColor": "#6EA8FFFF",
@@ -165,6 +168,7 @@
           {
             "id": "CloseButton",
             "type": "Button",
+            "isVariable": true,
             "props": {
               "label": "CLOSE",
               "backgroundColor": "#31558CFF",
