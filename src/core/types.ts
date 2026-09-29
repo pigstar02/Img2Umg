@@ -1,4 +1,5 @@
 export const FORMAT_VERSION = 1 as const;
+export const DESIGN_CANVAS = { width: 1920, height: 1080 } as const;
 
 export type Point = [number, number];
 export type Size = [number, number];
@@ -6,6 +7,9 @@ export type Size = [number, number];
 export interface FixedSlot {
   position: Point;
   size: Size;
+  autoSize?: boolean;
+  anchors?: [number, number, number, number];
+  alignment?: Point;
   zOrder?: number;
 }
 
@@ -27,6 +31,7 @@ export type NodeType =
   | "Overlay"
   | "HorizontalBox"
   | "VerticalBox"
+  | "WidgetSwitcher"
   | "SizeBox"
   | "ScaleBox"
   | "Spacer"
@@ -41,6 +46,8 @@ export type NodeType =
 export interface UiNode {
   id: string;
   type: NodeType;
+  /** Mirrors UMG Designer's "Is Variable" flag. Omit or false for non-runtime widgets. */
+  isVariable?: boolean;
   props?: Record<string, unknown>;
   slot?: UiSlot;
   children?: UiNode[];
@@ -68,6 +75,8 @@ export interface PreviewOverride {
 }
 
 export interface PreviewItem {
+  /** Optional per-item designer size for content-sized ListView entries. */
+  size?: Size;
   overrides: PreviewOverride[];
 }
 
@@ -101,6 +110,7 @@ export interface UiPackage {
 export interface VisualNode {
   id: string;
   type: Exclude<NodeType, "ListView" | "TileView">;
+  isVariable?: boolean;
   bounds: { x: number; y: number; width: number; height: number };
   props?: Record<string, unknown>;
   children?: VisualNode[];

@@ -1,0 +1,38 @@
+{
+  "format": "img2umg-preview",
+  "version": 1,
+  "entryTemplate": "StatusDetailItem",
+  "items": [
+    {
+      "size": [784, 48],
+      "overrides": [
+        { "target": "DetailState", "props": { "activeWidgetIndex": 0 } },
+        { "target": "StatusText", "props": { "text": "零食柜里还有东西，还顺利", "color": "#DFE0DBFF" } }
+      ]
+    },
+    {
+      "size": [784, 54],
+      "overrides": [
+        { "target": "DetailState", "props": { "activeWidgetIndex": 1 } },
+        { "target": "ResidentStatusText", "props": { "text": "光仔小黑子饿了" } },
+        { "target": "ResidentAvatar", "props": { "placeholderColor": "#D8C187FF" } }
+      ]
+    },
+    {
+      "size": [784, 54],
+      "overrides": [
+        { "target": "DetailState", "props": { "activeWidgetIndex": 1 } },
+        { "target": "ResidentStatusText", "props": { "text": "光仔名字名字饿了" } },
+        { "target": "ResidentAvatar", "props": { "placeholderColor": "#B8934FFF" } }
+      ]
+    },
+    {
+      "size": [784, 54],
+      "overrides": [
+        { "target": "DetailState", "props": { "activeWidgetIndex": 1 } },
+        { "target": "ResidentStatusText", "props": { "text": "光仔名字名字饿了" } },
+        { "target": "ResidentAvatar", "props": { "placeholderColor": "#C9A27CFF" } }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { FORMAT_VERSION, type EntryFile, type ExtractionOptions, type NodeType, type PreviewFile, type PreviewOverride, type UiNode, type UiPackage, type UiSlot, type VisualNode } from "./types";
+import { DESIGN_CANVAS, FORMAT_VERSION, type EntryFile, type ExtractionOptions, type NodeType, type PreviewFile, type PreviewOverride, type UiNode, type UiPackage, type UiSlot, type VisualNode } from "./types";
 
 type GeometryOptions = Required<Omit<ExtractionOptions, "onDiagnostic">>;
 
@@ -18,6 +18,9 @@ export function structureFingerprint(node: VisualNode): string {
 }
 
 export function extractUiPackage(screenId: string, canvas: { width: number; height: number }, visualRoot: VisualNode, options: ExtractionOptions = {}): UiPackage {
+  if (canvas.width !== DESIGN_CANVAS.width || canvas.height !== DESIGN_CANVAS.height) {
+    throw new Error(`Img2UMG screen extraction requires a ${DESIGN_CANVAS.width}x${DESIGN_CANVAS.height} design canvas.`);
+  }
   const config = { ...defaults, ...options };
   const entries: Record<string, EntryFile> = {};
   const previews: Record<string, PreviewFile> = {};
@@ -27,6 +30,7 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
     const node: UiNode = {
       id: visual.id,
       type: visual.type,
+      ...(visual.isVariable !== undefined ? { isVariable: visual.isVariable } : {}),
       ...(visual.props ? { props: structuredClone(visual.props) } : {}),
       ...(!root && parentType && parentBounds ? { slot: slotFor(visual.bounds, parentBounds, parentType) } : {}),
     };
@@ -213,6 +217,7 @@ function convertEntry(node: VisualNode, root = true, parentType?: NodeType, pare
   return {
     id: node.id,
     type: node.type,
+    ...(node.isVariable !== undefined ? { isVariable: node.isVariable } : {}),
     ...(node.props ? { props: structuredClone(node.props) } : {}),
     ...(!root && parentType && parentBounds ? { slot: slotFor(node.bounds, parentBounds, parentType) } : {}),
     ...(node.children?.length ? { children: node.children.map((child) => convertEntry(child, false, node.type, node.bounds)) } : {}),
@@ -239,7 +244,14 @@ function collectOverrides(template: VisualNode, item: VisualNode): PreviewOverri
 function slotFor(bounds: Bounds, parent: Bounds, parentType: NodeType): UiSlot {
   const left = bounds.x - parent.x;
   const top = bounds.y - parent.y;
-  if (parentType === "Canvas") return { position: [left, top], size: [bounds.width, bounds.height] };
+  if (parentType === "Canvas") {
+    return {
+      position: [left, top],
+      size: [bounds.width, bounds.height],
+      anchors: [0, 0, 0, 0],
+      alignment: [0, 0],
+    };
+  }
   if (parentType === "HorizontalBox" || parentType === "VerticalBox") return { sizeRule: "auto", padding: [0, 0, 0, 0], horizontalAlign: "fill", verticalAlign: "fill" };
   return {
     padding: [left, top, parent.width - left - bounds.width, parent.height - top - bounds.height],

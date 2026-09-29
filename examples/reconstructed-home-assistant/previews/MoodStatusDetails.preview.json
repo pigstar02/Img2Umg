@@ -1,0 +1,21 @@
+{
+  "format": "img2umg-preview",
+  "version": 1,
+  "entryTemplate": "StatusDetailItem",
+  "items": [
+    {
+      "size": [784, 48],
+      "overrides": [
+        { "target": "DetailState", "props": { "activeWidgetIndex": 0 } },
+        { "target": "StatusText", "props": { "text": "普通货光仔有1只，电视3只使用，还顺利", "color": "#DFE0DBFF" } }
+      ]
+    },
+    {
+      "size": [784, 48],
+      "overrides": [
+        { "target": "DetailState", "props": { "activeWidgetIndex": 0 } },
+        { "target": "StatusText", "props": { "text": "高级货光仔有4只，吉他够3只使用，可以再建多点吉他", "color": "#F07D5CFF" } }
+      ]
+    }
+  ]
+}

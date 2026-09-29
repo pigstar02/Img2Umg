@@ -1,0 +1,64 @@
+{
+  "format": "img2umg-entry",
+  "version": 1,
+  "id": "Inventory_TileItem",
+  "size": [205, 214],
+  "root": {
+    "id": "EquipmentItemRoot",
+    "type": "Canvas",
+    "children": [
+      {
+        "id": "ItemBackground",
+        "type": "Border",
+        "props": {
+          "backgroundColor": "#202C43FF",
+          "borderColor": "#3A4E70FF",
+          "borderWidth": 1,
+          "padding": 0
+        },
+        "slot": {
+          "position": [0, 0],
+          "size": [205, 214],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 0
+        }
+      },
+      {
+        "id": "ItemIcon",
+        "type": "Image",
+        "props": {
+          "source": null,
+          "placeholderColor": "#566783FF",
+          "tint": "#F5F8FFFF"
+        },
+        "slot": {
+          "position": [16, 16],
+          "size": [173, 142],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 1
+        }
+      },
+      {
+        "id": "ItemName",
+        "type": "Text",
+        "props": {
+          "text": "Equipment",
+          "fontSize": 16,
+          "color": "#FFFFFFFF",
+          "horizontalAlign": "center",
+          "verticalAlign": "center",
+          "wrap": false
+        },
+        "slot": {
+          "position": [12, 168],
+          "size": [181, 30],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 1
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "format": "img2umg-entry",
+  "version": 1,
+  "id": "NavigationItem",
+  "size": [242, 112],
+  "root": {
+    "id": "NavigationItemRoot",
+    "type": "Canvas",
+    "children": [
+      {
+        "id": "ItemSurface",
+        "type": "Border",
+        "props": {
+          "backgroundColor": "#20251FFF",
+          "borderColor": "#4A5148FF",
+          "borderWidth": 2,
+          "cornerRadius": 10,
+          "padding": 0
+        },
+        "slot": {
+          "position": [0, 0],
+          "size": [0, 0],
+          "anchors": [0, 0, 1, 1],
+          "alignment": [0, 0],
+          "zOrder": 0
+        }
+      },
+      {
+        "id": "SectionIcon",
+        "type": "Image",
+        "isVariable": true,
+        "props": {
+          "source": null,
+          "placeholderColor": "#D5A82FFF",
+          "tint": "#FFFFFFFF"
+        },
+        "slot": {
+          "position": [18, 0],
+          "size": [62, 62],
+          "anchors": [0, 0.5, 0, 0.5],
+          "alignment": [0, 0.5],
+          "zOrder": 1
+        }
+      },
+      {
+        "id": "SectionName",
+        "type": "Text",
+        "isVariable": true,
+        "props": {
+          "text": "生产",
+          "fontSize": 28,
+          "color": "#FFD43CFF",
+          "horizontalAlign": "left",
+          "verticalAlign": "center",
+          "wrap": false
+        },
+        "slot": {
+          "position": [92, 16],
+          "size": [128, 38],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 2
+        }
+      },
+      {
+        "id": "StatusPill",
+        "type": "Border",
+        "isVariable": true,
+        "props": {
+          "backgroundColor": "#775E0FFF",
+          "borderColor": "#B68B11FF",
+          "borderWidth": 2,
+          "cornerRadius": 9,
+          "padding": [10, 2]
+        },
+        "slot": {
+          "position": [92, -15],
+          "size": [132, 30],
+          "anchors": [0, 1, 0, 1],
+          "alignment": [0, 1],
+          "zOrder": 1
+        },
+        "children": [
+          {
+            "id": "StatusText",
+            "type": "Text",
+            "isVariable": true,
+            "props": {
+              "text": "待处理",
+              "fontSize": 20,
+              "color": "#FFF5C4FF",
+              "horizontalAlign": "left",
+              "verticalAlign": "center",
+              "wrap": false
+            },
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill"
+            }
+          }
+        ]
+      },
+      {
+        "id": "SelectionFrame",
+        "type": "Border",
+        "isVariable": true,
+        "props": {
+          "backgroundColor": "#00000000",
+          "borderColor": "#00000000",
+          "borderWidth": 4,
+          "cornerRadius": 11,
+          "padding": 0
+        },
+        "slot": {
+          "position": [0, 0],
+          "size": [0, 0],
+          "anchors": [0, 0, 1, 1],
+          "alignment": [0, 0],
+          "zOrder": 3
+        }
+      }
+    ]
+  }
+}

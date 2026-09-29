@@ -1,0 +1,80 @@
+{
+  "format": "img2umg-entry",
+  "version": 1,
+  "id": "Quest_ListItem",
+  "size": [300, 84],
+  "root": {
+    "id": "QuestItemRoot",
+    "type": "Canvas",
+    "children": [
+      {
+        "id": "QuestBackground",
+        "type": "Border",
+        "props": {
+          "backgroundColor": "#202C43FF",
+          "borderColor": "#3A4E70FF",
+          "borderWidth": 1,
+          "padding": 0
+        },
+        "slot": {
+          "position": [0, 0],
+          "size": [300, 84],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 0
+        }
+      },
+      {
+        "id": "QuestIcon",
+        "type": "Image",
+        "props": {
+          "source": null,
+          "placeholderColor": "#49658FFF",
+          "tint": "#F5F8FFFF"
+        },
+        "slot": {
+          "position": [14, 14],
+          "size": [56, 56],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 1
+        }
+      },
+      {
+        "id": "QuestName",
+        "type": "Text",
+        "props": {
+          "text": "Quest",
+          "fontSize": 17,
+          "color": "#FFFFFFFF",
+          "horizontalAlign": "left",
+          "verticalAlign": "center",
+          "wrap": false
+        },
+        "slot": {
+          "position": [84, 12],
+          "size": [198, 34],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 1
+        }
+      },
+      {
+        "id": "QuestProgress",
+        "type": "ProgressBar",
+        "props": {
+          "percent": 0.5,
+          "fillColor": "#67D3A7FF",
+          "backgroundColor": "#111827FF"
+        },
+        "slot": {
+          "position": [84, 54],
+          "size": [190, 8],
+          "anchors": [0, 0, 0, 0],
+          "alignment": [0, 0],
+          "zOrder": 1
+        }
+      }
+    ]
+  }
+}

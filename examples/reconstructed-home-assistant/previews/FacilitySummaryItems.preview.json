@@ -1,0 +1,35 @@
+{
+  "format": "img2umg-preview",
+  "version": 1,
+  "entryTemplate": "FacilitySummaryItem",
+  "items": [
+    {
+      "overrides": [
+        { "target": "FacilityName", "props": { "text": "2级种植田" } },
+        { "target": "FacilityCount", "props": { "text": "5/10" } },
+        { "target": "SummaryIcon", "props": { "placeholderColor": "#AEB59CFF" } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "FacilityName", "props": { "text": "1级种子箱" } },
+        { "target": "FacilityCount", "props": { "text": "1/2" } },
+        { "target": "SummaryIcon", "props": { "placeholderColor": "#70B47EFF" } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "FacilityName", "props": { "text": "1级屯屯室" } },
+        { "target": "FacilityCount", "props": { "text": "1/2" } },
+        { "target": "SummaryIcon", "props": { "placeholderColor": "#D9B85CFF" } }
+      ]
+    },
+    {
+      "overrides": [
+        { "target": "FacilityName", "props": { "text": "1级武器加工台" } },
+        { "target": "FacilityCount", "props": { "text": "1/2" } },
+        { "target": "SummaryIcon", "props": { "placeholderColor": "#D98C73FF" } }
+      ]
+    }
+  ]
+}

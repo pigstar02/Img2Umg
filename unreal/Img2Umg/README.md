@@ -42,6 +42,8 @@ The existing [test host](../TestHost/Img2UmgTest.uproject) retains its historica
 
 Existing generated assets with the same name are rebuilt in place. The importer stops at the first invalid file, unsupported type, unknown field, missing texture, or Blueprint compile/save failure and shows the full context in a dialog.
 
+Every screen uses a fixed `1920x1080` design canvas. The importer rejects other screen canvas sizes.
+
 ## Import order
 
 The manifest has three required arrays:
@@ -66,6 +68,7 @@ All entry documents are generated and compiled first. Each entry Blueprint imple
 | `Overlay` | Overlay |
 | `HorizontalBox` | Horizontal Box |
 | `VerticalBox` | Vertical Box |
+| `WidgetSwitcher` | Widget Switcher |
 | `SizeBox` | Size Box |
 | `ScaleBox` | Scale Box |
 | `Border` | Border |
@@ -79,10 +82,20 @@ All entry documents are generated and compiled first. Each entry Blueprint imple
 
 `Image.source` is either `null` or an Unreal texture object path such as `/Game/UI/T_Icon.T_Icon`. The importer does not cut or import source image files. `placeholderColor` produces a colored placeholder. `placeholderLabel` is retained as recognized preview metadata but is not drawn by UMG Image because UMG Image has no text layer.
 
+`WidgetSwitcher.activeWidgetIndex` selects the designer-visible default child and defaults to `0`. The importer creates all state children and their native Widget Switcher slots, but it does not generate Blueprint event graphs or runtime transition bindings.
+
+The optional node-level `isVariable` boolean maps directly to UMG Designer's **Is Variable** flag (`UWidget::bIsVariable`). It defaults to `false`; when enabled, the widget `id` is exposed as the generated Blueprint variable name. Use it only for widgets that runtime Blueprint or C++ must access directly.
+
 List and tile `spacing: [x, y]` maps to UMG's horizontal and vertical entry spacing. `TileView.entrySize` maps to entry width and height. `TileView.columns` is validated as a positive integer; UMG calculates the actual number of visible columns from the widget width, entry width, and spacing, so the slot width must be consistent with that value.
 
-Canvas children accept `position`, `size`, and `zOrder`. Other UMG parents use their native slot properties (`padding`, alignment, and box sizing rules). A slot field unsupported by its actual UMG parent is an import error rather than being ignored.
+Canvas children accept `position`, `size`, optional `anchors`, optional `alignment`, and `zOrder`. Anchors use normalized `[minX, minY, maxX, maxY]` values and alignment uses `[pivotX, pivotY]`; on a stretched axis, `size` is the far-edge margin. For example, `position: [0, 0]`, `size: [0, 0]`, and `anchors: [0, 0, 1, 1]` fills the parent at any viewport size. Other UMG parents use their native slot properties (`padding`, alignment, and box sizing rules). A slot field unsupported by its actual UMG parent is an import error rather than being ignored.
+
+Border corners are square by default. `cornerRadius` is an optional non-negative radius; omit it or use `0` for a rectangular border. A border stroke requires both `borderColor` and `borderWidth`.
 
 ## Compatibility and verification
 
 The code uses Unreal Engine 5 editor APIs and public UMG widget setters. The list entry class and designer preview count are protected engine properties without public setters, so those two documented UMG properties are assigned through Unreal reflection. Compile the plugin against the exact engine release used by the project before distributing it.
+
+The source keeps the slot import path compatible across Unreal Engine 5 releases instead of relying on compiler-specific variable shadowing behavior. List entry spacing is assigned through the reflected `HorizontalEntrySpacing` and `VerticalEntrySpacing` float properties because UE 5.4 exposes those properties but not the later public C++ setter functions. `UScaleBoxSlot::SetPadding` is used only on UE 5.0; Epic deprecated and disabled Scale Box slot padding in UE 5.1, so newer releases reject non-zero Scale Box slot padding with an actionable import error. Wrap the Scale Box in a padding-capable container when that spacing is required.
+
+The remote V1 revision reports a historical UE 5.6.1 build verification. This does not verify the current combined V1/V2 plugin: the new V2/Runtime code targets UE 5.8.2 and remains uncompiled/unrun. The included test host still tracks UE 5.7; select a 5.8.2 host for this revision and verify all modules before distributing binaries.

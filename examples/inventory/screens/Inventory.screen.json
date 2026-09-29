@@ -2,7 +2,7 @@
   "format": "img2umg-screen",
   "version": 1,
   "id": "Inventory",
-  "canvas": { "width": 1440, "height": 900 },
+  "canvas": { "width": 1920, "height": 1080 },
   "root": {
     "id": "Inventory",
     "type": "Canvas",
@@ -11,49 +11,53 @@
         "id": "Backdrop",
         "type": "Image",
         "props": { "source": null, "placeholderColor": "#172033" },
-        "slot": { "position": [0, 0], "size": [1440, 900], "zOrder": 0 }
+        "slot": { "position": [0, 0], "size": [0, 0], "anchors": [0, 0, 1, 1], "zOrder": 0 }
       },
       {
         "id": "Title",
         "type": "Text",
         "props": { "text": "INVENTORY", "fontSize": 38, "color": "#F5F8FFFF", "horizontalAlign": "left", "verticalAlign": "center", "wrap": false },
-        "slot": { "position": [72, 42], "size": [500, 60], "zOrder": 2 }
+        "slot": { "position": [72, 42], "size": [500, 60], "anchors": [0, 0, 0, 0], "zOrder": 2 }
       },
       {
         "id": "QuestLabel",
         "type": "Text",
         "props": { "text": "ACTIVE QUESTS", "fontSize": 18, "color": "#8FB5FFFF", "horizontalAlign": "left", "verticalAlign": "center" },
-        "slot": { "position": [72, 140], "size": [290, 36], "zOrder": 2 }
+        "slot": { "position": [72, 140], "size": [290, 36], "anchors": [0, 0, 0, 0], "zOrder": 2 }
       },
       {
         "id": "QuestList",
         "type": "ListView",
+        "isVariable": true,
         "props": { "entryTemplate": "Quest_ListItem", "preview": "Quest_ListItemPreview", "orientation": "vertical", "entrySize": [300, 84], "spacing": [0, 12] },
-        "slot": { "position": [72, 188], "size": [300, 500], "zOrder": 2 }
+        "slot": { "position": [72, -262], "size": [300, 500], "anchors": [0, 0.5, 0, 0.5], "zOrder": 2 }
       },
       {
         "id": "ItemsLabel",
         "type": "Text",
         "props": { "text": "EQUIPMENT", "fontSize": 18, "color": "#8FB5FFFF", "horizontalAlign": "left", "verticalAlign": "center" },
-        "slot": { "position": [430, 140], "size": [300, 36], "zOrder": 2 }
+        "slot": { "position": [-290, 140], "size": [300, 36], "anchors": [0.5, 0, 0.5, 0], "zOrder": 2 }
       },
       {
         "id": "ItemTiles",
         "type": "TileView",
+        "isVariable": true,
         "props": { "entryTemplate": "Inventory_TileItem", "preview": "Inventory_TileItemPreview", "entrySize": [205, 214], "spacing": [16, 16], "columns": 4 },
-        "slot": { "position": [430, 188], "size": [868, 674], "zOrder": 2 }
+        "slot": { "position": [-290, -262], "size": [868, 674], "anchors": [0.5, 0.5, 0.5, 0.5], "zOrder": 2 }
       },
       {
         "id": "Capacity",
         "type": "ProgressBar",
+        "isVariable": true,
         "props": { "percent": 0.67, "fillColor": "#6EA8FFFF", "backgroundColor": "#253149FF" },
-        "slot": { "position": [72, 784], "size": [300, 16], "zOrder": 2 }
+        "slot": { "position": [72, -116], "size": [300, 16], "anchors": [0, 1, 0, 1], "zOrder": 2 }
       },
       {
         "id": "Close",
         "type": "Button",
+        "isVariable": true,
         "props": { "label": "CLOSE", "backgroundColor": "#31558CFF", "textColor": "#FFFFFFFF", "fontSize": 16 },
-        "slot": { "position": [72, 820], "size": [300, 48], "zOrder": 2 }
+        "slot": { "position": [72, -80], "size": [300, 48], "anchors": [0, 1, 0, 1], "zOrder": 2 }
       }
     ]
   }

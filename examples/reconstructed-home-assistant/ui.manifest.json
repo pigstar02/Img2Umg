@@ -1,0 +1,21 @@
+{
+  "format": "img2umg-package",
+  "version": 1,
+  "screens": [
+    { "id": "HomeAssistantFacilities", "file": "screens/HomeAssistantFacilities.screen.json" }
+  ],
+  "entries": [
+    { "id": "StatusDetailItem", "file": "entries/StatusDetailItem.entry.json" },
+    { "id": "StatusBubbleItem", "file": "entries/StatusBubbleItem.entry.json" },
+    { "id": "NavigationItem", "file": "entries/NavigationItem.entry.json" },
+    { "id": "FacilitySummaryItem", "file": "entries/FacilitySummaryItem.entry.json" }
+  ],
+  "previews": [
+    { "id": "EnergyStatusDetails", "file": "previews/EnergyStatusDetails.preview.json" },
+    { "id": "MoodStatusDetails", "file": "previews/MoodStatusDetails.preview.json" },
+    { "id": "HungerStatusDetails", "file": "previews/HungerStatusDetails.preview.json" },
+    { "id": "StatusBubbles", "file": "previews/StatusBubbles.preview.json" },
+    { "id": "NavigationItems", "file": "previews/NavigationItems.preview.json" },
+    { "id": "FacilitySummaryItems", "file": "previews/FacilitySummaryItems.preview.json" }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "format": "img2umg-entry",
+  "version": 1,
+  "id": "FacilitySummaryItem",
+  "size": [264, 74],
+  "root": {
+    "id": "FacilitySummaryItemRoot",
+    "type": "HorizontalBox",
+    "children": [
+      {
+        "id": "SummaryIconBox",
+        "type": "SizeBox",
+        "props": {
+          "widthOverride": 64,
+          "minHeight": 74
+        },
+        "slot": {
+          "padding": [0, 0, 0, 0],
+          "horizontalAlign": "left",
+          "verticalAlign": "fill",
+          "sizeRule": "auto"
+        },
+        "children": [
+          {
+            "id": "SummaryIconCanvas",
+            "type": "Canvas",
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill"
+            },
+            "children": [
+              {
+                "id": "SummaryIcon",
+                "type": "Image",
+                "isVariable": true,
+                "props": {
+                  "source": null,
+                  "placeholderColor": "#A5AE91FF",
+                  "tint": "#FFFFFFFF"
+                },
+                "slot": {
+                  "position": [0, 0],
+                  "size": [50, 46],
+                  "anchors": [0.5, 0.5, 0.5, 0.5],
+                  "alignment": [0.5, 0.5],
+                  "zOrder": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SummaryTextColumn",
+        "type": "VerticalBox",
+        "slot": {
+          "padding": [8, 4, 4, 4],
+          "horizontalAlign": "fill",
+          "verticalAlign": "fill",
+          "sizeRule": "fill",
+          "fill": 1
+        },
+        "children": [
+          {
+            "id": "FacilityName",
+            "type": "Text",
+            "isVariable": true,
+            "props": {
+              "text": "2级种植田",
+              "fontSize": 20,
+              "color": "#444657FF",
+              "horizontalAlign": "left",
+              "verticalAlign": "bottom",
+              "wrap": false
+            },
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill",
+              "sizeRule": "fill",
+              "fill": 1
+            }
+          },
+          {
+            "id": "FacilityCount",
+            "type": "Text",
+            "isVariable": true,
+            "props": {
+              "text": "5/10",
+              "fontSize": 21,
+              "color": "#363847FF",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "wrap": false
+            },
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill",
+              "sizeRule": "fill",
+              "fill": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "SummaryDividerBox",
+        "type": "SizeBox",
+        "props": {
+          "widthOverride": 1,
+          "heightOverride": 58
+        },
+        "slot": {
+          "padding": [0, 0, 0, 0],
+          "horizontalAlign": "right",
+          "verticalAlign": "center",
+          "sizeRule": "auto"
+        },
+        "children": [
+          {
+            "id": "ColumnDivider",
+            "type": "Border",
+            "props": {
+              "backgroundColor": "#D0D2C4A0",
+              "padding": 0
+            },
+            "slot": {
+              "padding": [0, 0, 0, 0],
+              "horizontalAlign": "fill",
+              "verticalAlign": "fill"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
