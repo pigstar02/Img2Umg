@@ -8,3 +8,5 @@ unreal/TestHost/DerivedDataCache/
 unreal/TestHost/Intermediate/
 unreal/TestHost/Saved/
 unreal/TestHost/Content/Img2Umg/
+v2/output*/
+v2/demo-output/

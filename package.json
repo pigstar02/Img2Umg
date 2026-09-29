@@ -8,18 +8,27 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "extract": "node --import tsx src/cli/extract.ts",
-    "check": "npm run test && npm run build"
+    "check": "npm run test && npm run build",
+    "v2:extract": "node --import tsx v2/src/cli.ts",
+    "v2:typecheck": "tsc -p v2/tsconfig.json",
+    "v2:test": "vitest run v2/tests"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
+    "@fontsource/roboto": "^5.3.0",
+    "@types/css-tree": "^3.2.0",
+    "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "@types/node": "latest",
+    "ajv": "^8.20.0",
+    "css-tree": "^3.2.1",
+    "parse5": "^8.0.1",
+    "playwright-core": "^1.63.0",
     "tsx": "latest",
     "typescript": "latest",
     "vitest": "latest"

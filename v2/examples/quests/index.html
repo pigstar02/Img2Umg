@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Quest Journal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="canvas" data-ui-root data-ui-id="QuestScreen" data-ui-layout="canvas">
+    <h1 class="heading" data-ui-id="ScreenTitle">Quest Journal</h1>
+    <div class="quests" data-ui-id="QuestList" data-ui-collection="list">
+      <div class="card" data-ui-id="QuestOne" data-ui-entry="QuestCard">
+        <img class="icon" data-ui-id="QuestOneIcon" data-ui-field="icon" src="assets/quest.png" alt="">
+        <div class="details" data-ui-id="QuestOneDetails">
+          <p class="quest-title" data-ui-id="QuestOneTitle" data-ui-field="title">The Lost Compass</p>
+          <p class="description" data-ui-id="QuestOneDescription" data-ui-field="description">Find the compass near the old watchtower.</p>
+        </div>
+      </div>
+      <div class="card" data-ui-id="QuestTwo" data-ui-entry="QuestCard">
+        <img class="icon" data-ui-id="QuestTwoIcon" data-ui-field="icon" src="assets/quest.png" alt="">
+        <div class="details" data-ui-id="QuestTwoDetails">
+          <p class="quest-title" data-ui-id="QuestTwoTitle" data-ui-field="title">Supplies for the Village</p>
+          <p class="description" data-ui-id="QuestTwoDescription" data-ui-field="description">Bring fresh supplies to the village gate.</p>
+        </div>
+      </div>
+    </div>
+    <div class="actions" data-ui-id="QuestActions" data-ui-collection="none">
+      <button class="action" data-ui-id="TrackButton" type="button"><span class="action-label" data-ui-id="TrackLabel">Track Quest</span></button>
+      <button class="action" data-ui-id="MapButton" type="button"><span class="action-label" data-ui-id="MapLabel">Open Map</span></button>
+      <button class="action" data-ui-id="CloseButton" type="button"><span class="action-label" data-ui-id="CloseLabel">Close</span></button>
+    </div>
+  </div>
+</body>
+</html>

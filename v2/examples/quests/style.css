@@ -1,0 +1,113 @@
+@font-face {
+  font-family: 'DemoFont';
+  src: url('assets/DemoFont.woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+body { margin: 0px; }
+div, h1, p, img, button, span {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  position: relative;
+  margin: 0px;
+  padding: 0px;
+  border: 0;
+  min-width: 0;
+  min-height: 0;
+  font-family: 'DemoFont';
+  font-size: 16px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: normal;
+  white-space: nowrap;
+  color: #e8edf5;
+  overflow: visible;
+}
+.canvas {
+  display: block;
+  width: 800px;
+  height: 600px;
+  background-color: #101827;
+}
+.heading {
+  display: block;
+  position: absolute;
+  left: 40px;
+  top: 32px;
+  width: 720px;
+  height: 48px;
+  font-size: 32px;
+}
+.quests {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  left: 40px;
+  top: 112px;
+  width: 720px;
+  height: 308px;
+  gap: 20px;
+  align-items: stretch;
+}
+.card {
+  display: flex;
+  flex-direction: row;
+  width: 720px;
+  height: 144px;
+  padding: 24px;
+  gap: 24px;
+  align-items: center;
+  background-color: #202e43;
+}
+.icon {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: fill;
+}
+.details {
+  display: flex;
+  flex-direction: column;
+  width: 584px;
+  height: 80px;
+  gap: 12px;
+  align-items: flex-start;
+}
+.quest-title {
+  display: block;
+  width: 584px;
+  height: 32px;
+  font-size: 24px;
+}
+.description {
+  display: block;
+  width: 584px;
+  height: 24px;
+  color: #b8c8df;
+}
+.actions {
+  display: flex;
+  flex-direction: row;
+  position: absolute;
+  left: 40px;
+  top: 504px;
+  width: 720px;
+  height: 56px;
+  gap: 24px;
+  align-items: center;
+}
+.action {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 224px;
+  height: 56px;
+  background-color: #305b87;
+}
+.action-label {
+  display: block;
+  width: 224px;
+  height: 24px;
+  text-align: center;
+}

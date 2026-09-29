@@ -104,9 +104,19 @@ export interface VisualNode {
   bounds: { x: number; y: number; width: number; height: number };
   props?: Record<string, unknown>;
   children?: VisualNode[];
+  /** Controls extraction of this container's direct children; never serialized to UMG. */
+  collection?: "auto" | "list" | "tile" | "none";
+}
+
+export interface ExtractionDiagnostic {
+  parentId: string;
+  itemIds: string[];
+  status: "extracted" | "skipped";
+  reason: string;
 }
 
 export interface ExtractionOptions {
+  onDiagnostic?: (diagnostic: ExtractionDiagnostic) => void;
   sizeTolerance?: number;
   alignmentTolerance?: number;
   spacingTolerance?: number;

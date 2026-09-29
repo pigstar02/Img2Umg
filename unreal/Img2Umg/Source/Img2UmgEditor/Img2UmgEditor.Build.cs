@@ -16,6 +16,8 @@ public class Img2UmgEditor : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new[]
         {
+            "Img2UmgRuntime",
+            "ImageWrapper",
             "AssetRegistry",
             "AssetTools",
             "DesktopPlatform",

@@ -1,4 +1,5 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -94,6 +95,72 @@ describe("conservative decisions", () => {
 
   it("fingerprints structure while ignoring ids and visual props", () => {
     expect(structureFingerprint(card("A", 0, 0, "one"))).toBe(structureFingerprint(card("B", 500, 500, "two")));
+  });
+});
+
+describe("explicit collection decisions", () => {
+  const extract = (node: VisualNode, onDiagnostic?: import("../src/core/types").ExtractionOptions["onDiagnostic"]) => extractUiPackage("Test", { width: 800, height: 600 }, node, { onDiagnostic });
+
+  it("extracts two explicitly identified records and omits metadata", () => {
+    const input = { ...root([card("A", 20, 20), card("B", 20, 110)]), collection: "list" as const };
+    const diagnostics: import("../src/core/types").ExtractionDiagnostic[] = [];
+    const pkg = extract(input, (diagnostic) => diagnostics.push(diagnostic));
+    expect(firstCollection(pkg)?.type).toBe("ListView");
+    expect(diagnostics[0]).toMatchObject({ parentId: "Root", status: "extracted", itemIds: ["A", "B"] });
+    expect(JSON.stringify(pkg)).not.toContain('"collection"');
+    expect(validatePackage(pkg).valid).toBe(true);
+  });
+
+  it("extracts an explicit horizontal list and an incomplete tile grid", () => {
+    const horizontal = extract({ ...root([card("A", 20, 20), card("B", 130, 20)]), collection: "list" });
+    expect(firstCollection(horizontal)?.props?.orientation).toBe("horizontal");
+    const tile = extract({ ...root([card("A", 20, 20), card("B", 130, 20), card("C", 20, 110)]), collection: "tile" });
+    expect(firstCollection(tile)?.type).toBe("TileView");
+    expect(validatePackage(tile).valid).toBe(true);
+  });
+
+  it.each(["invalid", "leaf"])("rejects %s collection hints in the CLI", async (mode) => {
+    const directory = await mkdtemp(join(tmpdir(), "img2umg-cli-"));
+    const input = join(directory, "input.json");
+    const node = mode === "invalid" ? { ...root([]), collection: "force" } : { id: "Text", type: "Text", bounds: { x: 0, y: 0, width: 100, height: 20 }, props: { text: "Hi" }, collection: "none" };
+    await writeFile(input, JSON.stringify({ screenId: "Test", canvas: { width: 800, height: 600 }, root: node }));
+    const result = spawnSync(process.execPath, ["--import", "tsx", "src/cli/extract.ts", input, join(directory, "out")], { encoding: "utf8" });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("$.root.collection:");
+  });
+
+  it("keeps fixed buttons ordinary with none", () => {
+    const buttons: VisualNode[] = [0, 1, 2].map((i) => ({ id: `Button${i}`, type: "Button", bounds: { x: i * 110, y: 0, width: 100, height: 40 }, props: { label: String(i) } }));
+    expect(extract({ ...root(buttons), collection: "none" }).manifest.entries).toHaveLength(0);
+  });
+
+  it("still extracts nested collections beneath none", () => {
+    const panel = { ...root([card("A", 20, 20), card("B", 20, 110)]), id: "Panel", collection: "list" as const };
+    expect(extract({ ...root([panel]), collection: "none" }).manifest.entries).toHaveLength(1);
+  });
+
+  it.each(["list", "tile"] as const)("never partially extracts an invalid explicit %s", (collection) => {
+    const nodes = [card("A", 20, 20), card("B", 20, 110), card("C", 20, 200)];
+    nodes.push({ id: "Heading", type: "Text", bounds: { x: 0, y: 0, width: 100, height: 20 }, props: { text: "Title" } });
+    const diagnostics: import("../src/core/types").ExtractionDiagnostic[] = [];
+    expect(extract({ ...root(nodes), collection }, (d) => diagnostics.push(d)).manifest.entries).toHaveLength(0);
+    expect(diagnostics[0].reason).toContain("structure");
+  });
+
+  it("rejects conflicting hints and irregular spacing", () => {
+    expect(extract({ ...root([card("A", 20, 20), card("B", 20, 110)]), collection: "tile" }).manifest.entries).toHaveLength(0);
+    expect(extract({ ...root([card("A", 20, 20), card("B", 20, 110), card("C", 20, 300)]), collection: "list" }).manifest.entries).toHaveLength(0);
+  });
+
+  it("rejects a final grid row that starts at the second column", () => {
+    const nodes = [card("A", 20, 20), card("B", 130, 20), card("C", 240, 20), card("D", 130, 110), card("E", 240, 110)];
+    expect(extract({ ...root(nodes), collection: "tile" }).manifest.entries).toHaveLength(0);
+  });
+
+  it("rejects incompatible property keys rather than losing deletions", () => {
+    const nodes = [card("A", 20, 20), card("B", 20, 110)];
+    delete nodes[1].children![0].props!.color;
+    expect(extract({ ...root(nodes), collection: "list" }).manifest.entries).toHaveLength(0);
   });
 });
 

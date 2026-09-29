@@ -1,6 +1,8 @@
 import { FORMAT_VERSION, type EntryFile, type ExtractionOptions, type NodeType, type PreviewFile, type PreviewOverride, type UiNode, type UiPackage, type UiSlot, type VisualNode } from "./types";
 
-const defaults: Required<ExtractionOptions> = {
+type GeometryOptions = Required<Omit<ExtractionOptions, "onDiagnostic">>;
+
+const defaults: GeometryOptions = {
   sizeTolerance: 0.08,
   alignmentTolerance: 6,
   spacingTolerance: 6,
@@ -28,12 +30,35 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
       ...(visual.props ? { props: structuredClone(visual.props) } : {}),
       ...(!root && parentType && parentBounds ? { slot: slotFor(visual.bounds, parentBounds, parentType) } : {}),
     };
-    if (!visual.children?.length) return node;
+    if (!visual.children?.length) {
+      if (visual.collection === "list" || visual.collection === "tile") options.onDiagnostic?.({ parentId: visual.id, itemIds: [], status: "skipped", reason: "too few items (need 2)" });
+      return node;
+    }
 
     const output: UiNode[] = [];
     for (let index = 0; index < visual.children.length;) {
-      const run = sameFingerprintRun(visual.children, index);
-      const pattern = run.length >= config.minimumItems ? classifyPattern(run, config) : null;
+      const explicit = visual.collection === "list" || visual.collection === "tile";
+      const run = explicit || visual.collection === "none" ? visual.children : sameFingerprintRun(visual.children, index);
+      const minimum = explicit ? 2 : config.minimumItems;
+      let reason = "";
+      let pattern: Pattern | null = null;
+      if (visual.collection === "none") reason = "extraction disabled by collection:none";
+      else if (run.length < minimum) reason = `too few items (need ${minimum})`;
+      else if (!run.every((item) => structureFingerprint(item) === structureFingerprint(run[0]))) reason = "inconsistent item structure";
+      else if (!run.every((item) => compatibleProps(run[0], item))) reason = "inconsistent property keys; cannot safely encode overrides";
+      else {
+        pattern = classifyPattern(run, config);
+        if (!pattern) reason = "irregular sizes, alignment, spacing or grid columns";
+        else if (explicit && pattern.type !== (visual.collection === "list" ? "ListView" : "TileView")) {
+          pattern = null;
+          reason = "collection hint conflicts with geometric layout";
+        }
+      }
+      options.onDiagnostic?.({ parentId: visual.id, itemIds: run.map((item) => item.id), status: pattern ? "extracted" : "skipped", reason: pattern ? `${pattern.type}: compatible structure and regular geometry` : reason });
+      if (!pattern && (explicit || visual.collection === "none")) {
+        output.push(...visual.children.map((child) => convert(child, false, visual.type, visual.bounds)));
+        break;
+      }
       if (!pattern) {
         output.push(convert(visual.children[index], false, visual.type, visual.bounds));
         index += 1;
@@ -98,6 +123,11 @@ export function extractUiPackage(screenId: string, canvas: { width: number; heig
   };
 }
 
+function compatibleProps(base: VisualNode, item: VisualNode): boolean {
+  const keys = (node: VisualNode) => Object.keys(node.props ?? {}).sort().join("\u0000");
+  return keys(base) === keys(item) && (base.children ?? []).every((child, index) => compatibleProps(child, item.children![index]));
+}
+
 function sameFingerprintRun(nodes: VisualNode[], start: number): VisualNode[] {
   const fingerprint = structureFingerprint(nodes[start]);
   let end = start + 1;
@@ -105,7 +135,7 @@ function sameFingerprintRun(nodes: VisualNode[], start: number): VisualNode[] {
   return nodes.slice(start, end);
 }
 
-function classifyPattern(nodes: VisualNode[], options: Required<ExtractionOptions>): Pattern | null {
+function classifyPattern(nodes: VisualNode[], options: GeometryOptions): Pattern | null {
   if (!similarSizes(nodes, options.sizeTolerance)) return null;
   const byY = cluster(nodes, (node) => node.bounds.y, options.alignmentTolerance);
   const byX = cluster(nodes, (node) => node.bounds.x, options.alignmentTolerance);
@@ -121,12 +151,14 @@ function classifyPattern(nodes: VisualNode[], options: Required<ExtractionOption
   return { type: "ListView", columns: oneRow ? nodes.length : 1, spacing: oneRow ? [average(gaps), 0] : [0, average(gaps)], ordered };
 }
 
-function classifyGrid(nodes: VisualNode[], rows: VisualNode[][], columns: VisualNode[][], options: Required<ExtractionOptions>): Pattern | null {
+function classifyGrid(nodes: VisualNode[], rows: VisualNode[][], columns: VisualNode[][], options: GeometryOptions): Pattern | null {
   if (rows.length < 2 || columns.length < 2) return null;
   const columnCount = columns.length;
   if (rows.some((row, index) => index < rows.length - 1 && row.length !== columnCount)) return null;
   if (rows.at(-1)!.length > columnCount || rows.at(-1)!.length === 0) return null;
   const sortedRows = rows.map((row) => [...row].sort(byLeft)).sort((a, b) => a[0].bounds.y - b[0].bounds.y);
+  const reference = sortedRows[0];
+  if (sortedRows.some((row) => row.some((item, index) => Math.abs(item.bounds.x - reference[index].bounds.x) > options.alignmentTolerance))) return null;
   const ordered = sortedRows.flat();
   const horizontalGaps = sortedRows.flatMap((row) => adjacentGaps(row, "x"));
   const verticalGaps = adjacentGaps(sortedRows.map((row) => row[0]), "y");

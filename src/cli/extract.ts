@@ -21,7 +21,9 @@ if (!inputArgument || !outputArgument) {
     const outputPath = resolve(outputArgument);
     const value: unknown = JSON.parse(await readFile(inputPath, "utf8"));
     const input = validateVisualInput(value);
-    const pkg = extractUiPackage(input.screenId, input.canvas, input.root);
+    const pkg = extractUiPackage(input.screenId, input.canvas, input.root, {
+      onDiagnostic: ({ parentId, itemIds, status, reason }) => console.error(`[${status}] ${parentId} (${itemIds.join(", ")}): ${reason}`),
+    });
     await writeUiPackage(pkg, outputPath);
     console.log(`Wrote ${1 + pkg.manifest.screens.length + pkg.manifest.entries.length + pkg.manifest.previews.length} files to ${outputPath}`);
   } catch (error) {
@@ -46,6 +48,10 @@ function validateVisualNode(value: unknown, path: string, errors: string[]) {
   const types = ["Canvas", "Overlay", "HorizontalBox", "VerticalBox", "SizeBox", "ScaleBox", "Spacer", "Border", "Image", "Text", "Button", "ProgressBar"];
   if (typeof value.type !== "string" || !types.includes(value.type)) errors.push(`${path}.type: unsupported visual node type`);
   if (!isObject(value.bounds) || !finite(value.bounds.x) || !finite(value.bounds.y) || !positive(value.bounds.width) || !positive(value.bounds.height)) errors.push(`${path}.bounds: x/y must be finite and width/height positive`);
+  if (value.collection !== undefined) {
+    if (!["auto", "list", "tile", "none"].includes(String(value.collection)) || typeof value.collection !== "string") errors.push(`${path}.collection: expected auto, list, tile or none`);
+    if (!["Canvas", "Overlay", "HorizontalBox", "VerticalBox", "SizeBox", "ScaleBox", "Border", "Button"].includes(String(value.type))) errors.push(`${path}.collection: only containers accept collection hints`);
+  }
   if (value.props !== undefined && !isObject(value.props)) errors.push(`${path}.props: expected object`);
   if (value.children !== undefined && !Array.isArray(value.children)) errors.push(`${path}.children: expected array`);
   else if (Array.isArray(value.children)) value.children.forEach((child, index) => validateVisualNode(child, `${path}.children[${index}]`, errors));

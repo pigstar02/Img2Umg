@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://img2umg.local/v2/ui.schema.json",
+  "title": "UiDocument v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "target", "viewport", "root", "templates", "collections", "assets", "fonts", "observations"],
+  "properties": {
+    "format": { "const": "html-umg-ir" },
+    "version": { "const": 2 },
+    "target": { "const": "ue-5.8.2" },
+    "viewport": {
+      "type": "object", "additionalProperties": false, "required": ["width", "height"],
+      "properties": { "width": { "$ref": "#/definitions/positive" }, "height": { "$ref": "#/definitions/positive" } }
+    },
+    "root": { "$ref": "#/definitions/node" },
+    "templates": { "type": "object", "propertyNames": { "minLength": 1 }, "additionalProperties": { "$ref": "#/definitions/node" } },
+    "collections": { "type": "array", "items": { "$ref": "#/definitions/collection" } },
+    "assets": { "type": "array", "items": { "$ref": "#/definitions/asset" } },
+    "fonts": { "type": "array", "items": { "$ref": "#/definitions/font" } },
+    "observations": { "type": "object", "propertyNames": { "minLength": 1 }, "additionalProperties": { "$ref": "#/definitions/rect" } }
+  },
+  "definitions": {
+    "nonempty": { "type": "string", "minLength": 1 },
+    "nonnegative": { "type": "number", "minimum": 0 },
+    "positive": { "type": "number", "exclusiveMinimum": 0 },
+    "length": { "anyOf": [{ "$ref": "#/definitions/nonnegative" }, { "const": "auto" }] },
+    "color": { "type": "string", "pattern": "^(?:transparent|#[0-9a-fA-F]{3}|#[0-9a-fA-F]{4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|rgb\\(\\s*[0-9]+(?:\\.[0-9]+)?%?\\s*,\\s*[0-9]+(?:\\.[0-9]+)?%?\\s*,\\s*[0-9]+(?:\\.[0-9]+)?%?\\s*\\)|rgba\\(\\s*[0-9]+(?:\\.[0-9]+)?%?\\s*,\\s*[0-9]+(?:\\.[0-9]+)?%?\\s*,\\s*[0-9]+(?:\\.[0-9]+)?%?\\s*,\\s*(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)%?\\s*\\))$" },
+    "edges": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/definitions/nonnegative" } },
+    "align": { "enum": ["flex-start", "flex-end", "center", "stretch"] },
+    "box": {
+      "type": "object", "additionalProperties": false,
+      "required": ["width", "height", "padding", "margin", "gap", "align", "self", "position", "left", "top", "zIndex", "display", "visibility", "overflow"],
+      "properties": {
+        "width": { "$ref": "#/definitions/length" }, "height": { "$ref": "#/definitions/length" },
+        "padding": { "$ref": "#/definitions/edges" }, "margin": { "$ref": "#/definitions/edges" },
+        "gap": { "$ref": "#/definitions/nonnegative" }, "align": { "$ref": "#/definitions/align" },
+        "self": { "enum": ["auto", "flex-start", "flex-end", "center", "stretch"] },
+        "position": { "enum": ["flow", "absolute"] },
+        "left": { "$ref": "#/definitions/nonnegative" }, "top": { "$ref": "#/definitions/nonnegative" },
+        "zIndex": { "type": "integer", "minimum": 0 },
+        "display": { "enum": ["visible", "collapsed"] }, "visibility": { "enum": ["visible", "hidden"] },
+        "overflow": { "enum": ["visible", "clip"] }
+      }
+    },
+    "paint": {
+      "type": "object", "additionalProperties": false, "required": ["background", "color"],
+      "properties": { "background": { "$ref": "#/definitions/color" }, "color": { "$ref": "#/definitions/color" } }
+    },
+    "text": {
+      "type": "object", "additionalProperties": false, "required": ["value", "family", "size", "weight", "align"],
+      "properties": { "value": { "type": "string" }, "family": { "$ref": "#/definitions/nonempty" }, "size": { "$ref": "#/definitions/positive" }, "weight": { "enum": [400, 700] }, "align": { "enum": ["left", "center", "right"] } }
+    },
+    "node": {
+      "type": "object", "additionalProperties": false, "required": ["id", "kind", "layout", "box", "paint", "children"],
+      "properties": {
+        "id": { "$ref": "#/definitions/nonempty" }, "kind": { "enum": ["panel", "text", "image", "button", "collection"] },
+        "field": { "type": "string" }, "layout": { "enum": ["row", "column", "canvas", "leaf"] },
+        "box": { "$ref": "#/definitions/box" }, "paint": { "$ref": "#/definitions/paint" }, "text": { "$ref": "#/definitions/text" },
+        "assetId": { "$ref": "#/definitions/nonempty" }, "collectionId": { "$ref": "#/definitions/nonempty" },
+        "children": { "type": "array", "items": { "$ref": "#/definitions/node" } }
+      }
+    },
+    "asset": {
+      "type": "object", "additionalProperties": false, "required": ["id", "path", "kind", "mime", "sha256"],
+      "properties": { "id": { "$ref": "#/definitions/nonempty" }, "path": { "$ref": "#/definitions/nonempty" }, "kind": { "enum": ["image", "font"] }, "mime": { "type": "string" }, "sha256": { "type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[0-9a-fA-F]{64}$" } }
+    },
+    "font": {
+      "type": "object", "additionalProperties": false, "required": ["family", "weight", "assetId"],
+      "properties": { "family": { "$ref": "#/definitions/nonempty" }, "weight": { "enum": [400, 700] }, "assetId": { "$ref": "#/definitions/nonempty" } }
+    },
+    "override": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "text": { "type": "string" }, "assetId": { "$ref": "#/definitions/nonempty" }, "background": { "$ref": "#/definitions/color" }, "color": { "$ref": "#/definitions/color" } }
+    },
+    "item": {
+      "type": "object", "additionalProperties": false, "required": ["key", "nodeIds", "overrides"],
+      "properties": {
+        "key": { "$ref": "#/definitions/nonempty" },
+        "nodeIds": { "type": "object", "propertyNames": { "minLength": 1 }, "additionalProperties": { "$ref": "#/definitions/nonempty" } },
+        "overrides": { "type": "object", "propertyNames": { "minLength": 1 }, "additionalProperties": { "$ref": "#/definitions/override" } }
+      }
+    },
+    "collection": {
+      "type": "object", "additionalProperties": false, "required": ["id", "nodeId", "templateId", "orientation", "items"],
+      "properties": { "id": { "$ref": "#/definitions/nonempty" }, "nodeId": { "$ref": "#/definitions/nonempty" }, "templateId": { "$ref": "#/definitions/nonempty" }, "orientation": { "enum": ["horizontal", "vertical"] }, "items": { "type": "array", "items": { "$ref": "#/definitions/item" } } }
+    },
+    "rect": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "width", "height"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "width": { "$ref": "#/definitions/nonnegative" }, "height": { "$ref": "#/definitions/nonnegative" } }
+    }
+  }
+}
